@@ -13,9 +13,9 @@ class Solver3D
 	void Sstep(); // move a scalar field forward one time step
 
     private:
-	int numRows;
-	int numCols;
-	int numLayers;
+	int width;
+	int height;
+	int depth;
 	int totalSize; // total number of cells
 	float visc;   // viscosity
 	float kS;     // diffusion constant
@@ -41,7 +41,7 @@ class Solver3D
 
 	inline int idx(int i, int j, int k){ return i + numCols * (j + numRows * k); }
 
-	void addForce(float *f);
+	void addForce(float **vf, int flag);
 	void diffusion(float *f, float *f0, float k);
 	void advect(float *f, float *f0, float *v);
 	void project(float *f, float *f0);

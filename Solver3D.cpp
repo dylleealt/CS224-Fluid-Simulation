@@ -1,5 +1,7 @@
 #include "Solver3D.h"
 
+#include <cmath>
+
 #define SWAP(f, f0) {float *tmp=f; f=f0; f0=tmp;}
 
 Solver3D::Solver3D()
@@ -22,14 +24,14 @@ Solver3D::~Solver3D()
 
 void Solver3D::init()
 {
-    numRows = 100;
-    numCols = 100;
-    numLayers = 100;
-    totalSize = numRows * numCols * numLayers;
+    width = 100;
+    height = 100;
+    depth = 100;
+    totalSize = width * height * depth;
     visc = 0.3f;
     kS = 0.5f;
     aS = 0.3f;
-    dt = 0.5f;
+    dt = 1.f;
 
     vx = new float [totalSize];
     vy = new float [totalSize];
@@ -60,4 +62,32 @@ void Solver3D::reset()
          p[i] = 0.f;
          d[i] = 0.f;
     }
+}
+
+void Solver3D::addForce(float **vf, int flag)
+{
+    if (flag){
+        // add gravity
+	for (int i = 0; i < totalSize; ++i){
+	    // may need to adjust gravitational constant later due to units
+            vz[i] = vz0[i] + -9.8f * dt;
+	}
+	switch (flag){
+            case 1: // add swirl
+		int relx, rely;
+		int cx = width / 2, cy = height / 2;
+	        for (int i = 0; i < width; ++i){
+                    for (int j = 0; j < height; ++j){
+                       relx = i - cx;
+		       rely = j - cy;
+		       radius = relx * rely; // not really, we'll fix this later
+		       // add an orthogonal vector to get swirl
+                       vx[i] = vx0[i] + (-rely * dt / radius);
+		       vy[i] = vy0[i] + (-relx * dt / radius);
+		    }
+		}
+		break;
+	}
+    }
+    // else no external forces
 }
