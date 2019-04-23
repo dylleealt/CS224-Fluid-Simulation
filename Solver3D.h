@@ -16,7 +16,7 @@ class Solver3D
 	int numRows;
 	int numCols;
 	int numLayers;
-	int numCells; // total number of cells
+	int totalSize; // total number of cells
 	float visc;   // viscosity
 	float kS;     // diffusion constant
 	float aS;     // dissipation rate
