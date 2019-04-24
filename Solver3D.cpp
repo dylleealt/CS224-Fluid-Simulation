@@ -122,7 +122,19 @@ void Solver3D::addSource(int flag)
     // else no external forces
 }
 
-void diffuse(float *f, float *f0, float k)
+void diffuse(float *f, float *f0, float a)
 {
-    
+    for (int i = 0; i < totalSize; ++i){
+        f[i] = 0.f;
+    }
+    for (int t = 0; t < 10; ++t){
+        for (int i = 1; i < width - 1; ++i){
+            for (int j = 1; j < height; ++j){
+	        for (int k = 1; k < depth; ++k){
+                    f[idx(i,j,k)] = (f0[idx(i,j,k)] + a * (f[idx(i+1,j,k)] + f[idx(i-1,j,k)] + f[idx(i,j+1,k)] + f[idx(i,j-1,k)] + f[idx(i,j,k+1)] + f[idx(i,j,k-1)]) / (4.f * a + 1)
+
+		}
+	    }
+	}
+    }
 }
