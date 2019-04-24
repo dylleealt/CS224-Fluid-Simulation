@@ -9,8 +9,8 @@ class Solver3D
         void init();
 	void reset();
 
-	void Vstep(); // move a vector field forward one time step 
-	void Sstep(); // move a scalar field forward one time step
+	void vStep(); // move a vector field forward one time step 
+	void sStep(); // move a scalar field forward one time step
 
     private:
 	int width;
@@ -30,6 +30,7 @@ class Solver3D
 	float *vy0;
 	float *vz0;
 
+	// we may not need these
 	float *v[3];    // current velocity 
 	float *v0[3];   // old velocity
 	
@@ -41,8 +42,8 @@ class Solver3D
 
 	inline int idx(int i, int j, int k){ return i + numCols * (j + numRows * k); }
 
-	void addForce(float **vf, int flag);
-	void diffusion(float *f, float *f0, float k);
+	void addSource(int flag);
+	void diffuse(float *f, float *f0, float k);
 	void advect(float *f, float *f0, float *v);
 	void project(float *f, float *f0);
 	void dissipate(float *f, float *f0);

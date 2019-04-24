@@ -64,7 +64,37 @@ void Solver3D::reset()
     }
 }
 
-void Solver3D::addForce(float **vf, int flag)
+void Solver3D::vStep()
+{
+    SWAP(vx, vx0);
+    SWAP(vy, vy0);
+    SWAP(vz, vz0);
+    addForce(1);	
+    SWAP(vx, vx0);
+    SWAP(vy, vy0);
+    SWAP(vz, vz0);
+    advect(vx, vx0)
+    advect(vy, vy0)
+    advect(vz, vz0)
+    SWAP(vx, vx0);
+    SWAP(vy, vy0);
+    SWAP(vz, vz0);
+    diffuse(vx, vx0, visc);
+    diffuse(vy, vy0, visc);
+    diffuse(vz, vz0, visc);
+    SWAP(vx, vx0);
+    SWAP(vy, vy0);
+    SWAP(vz, vz0);
+    project(vx, vx0);
+    project(vy, vy0);
+    project(vz, vz0);
+}
+
+void Solver3D::sStep()
+{
+}
+
+void Solver3D::addSource(int flag)
 {
     if (flag){
         // add gravity
@@ -90,4 +120,9 @@ void Solver3D::addForce(float **vf, int flag)
 	}
     }
     // else no external forces
+}
+
+void diffuse(float *f, float *f0, float k)
+{
+    
 }
