@@ -139,7 +139,6 @@ void advect(float *f, float *f0)
 		int i1 = i0 + 1;
 		int j1 = j0 + 1;
 		int k1 = k0 + 1;
-		float wL = px[
 	    }
 	}
     }
