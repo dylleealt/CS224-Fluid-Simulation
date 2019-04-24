@@ -122,6 +122,29 @@ void Solver3D::addSource(int flag)
     // else no external forces
 }
 
+void advect(float *f, float *f0)
+{
+    float prevX, prevY, prevZ;
+    for (int i = 1; i < width - 1; ++i){
+        for (int j = 1; j < height - 1; ++j){
+            for (int k = 1; k < width - 1; ++k){
+		curIdx = idx(i, j, k);
+                prevX = px[curIdx] - vx[curIdx] * dt;
+                prevY = py[curIdx] - vy[curIdx] * dt;
+                prevZ = pz[curIdx] - vz[curIdx] * dt;
+		// clamp these values to the boundary
+		int i0 = static_cast<int>(prevX - 0.5f);
+		int j0 = static_cast<int>(prevY - 0.5f);
+		int k0 = static_cast<int>(prevZ - 0.5f);
+		int i1 = i0 + 1;
+		int j1 = j0 + 1;
+		int k1 = k0 + 1;
+		float wL = px[
+	    }
+	}
+    }
+}
+
 void diffuse(float *f, float *f0, float a)
 {
     for (int i = 0; i < totalSize; ++i){

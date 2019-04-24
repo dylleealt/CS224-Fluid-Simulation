@@ -40,7 +40,7 @@ class Solver3D
 	float *d;     // density
 	float *d0;
 
-	inline int idx(int i, int j, int k){ return i + numCols * (j + numRows * k); }
+	inline int idx(int i, int j, int k){ return i + width * (j + height * k); }
 
 	void addSource(int flag);
 	void diffuse(float *f, float *f0, float k);
