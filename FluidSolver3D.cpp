@@ -14,28 +14,27 @@ FluidSolver::~FluidSolver()
 
 void FluidSolver::vStep()
 {
-    SWAP(v, v0);
-    addForce(1);
-    SWAP(v, v0);
-    advect(vx, vx0)
-    advect(vy, vy0)
-    advect(vz, vz0)
-    SWAP(vx, vx0);
-    SWAP(vy, vy0);
-    SWAP(vz, vz0);
-    diffuse(vx, vx0, visc);
-    diffuse(vy, vy0, visc);
-    diffuse(vz, vz0, visc);
-    SWAP(vx, vx0);
-    SWAP(vy, vy0);
-    SWAP(vz, vz0);
-    project(vx, vx0);
-    project(vy, vy0);
-    project(vz, vz0);
+    addForce();
+    SWAP();
+    advect();
+    SWAP();
+    diffuse();
+    SWAP();
+    project();  
 }
 
 void FluidSolver::sStep()
 {
+    addSource();
+    SWAP(); 
+    advect();
+    SWAP(); 
+    diffuse();
+}
+
+void FluidSolver::setBoundary(float *u)
+{
+
 }
 
 void FluidSolver::addForce(float *u, float *f, float dt, int flag)
@@ -114,6 +113,7 @@ void FluidSolver::linSolve(float *u, float *u0, float a, float c)
 		}
 	    }
 	}
+	setBoundary(u);
     }
 }
 
@@ -122,6 +122,39 @@ void FluidSolver::diffuse(float *u, float *u0, float k, float dt)
     float a = k * dt * (width - 2) * (height - 2) * (depth - 2);
     float c = 1 + 4 * a;
     linSolve(u, u0, a, c);
+}
+
+void FluidSolver::project(float *u, float *u0, float dt)
+{
+    for (int i = 1; i < width - 1; ++i){
+        for (int j = 1; j < height - 1; ++j){
+            for (int k = 1; k < depth - 1; ++k){
+		// missing scale factor for divergence
+	        div[idx(i,j,k)] = -0.5f * (ux[idx(i+1,j,k)] - ux[idx(i-1,j,k)]
+					+ uy[idx(i,j+1,k)] - uy[idx(i,j-1,k)]
+					+ uz[idx(i,j,k+1)] - uz[idx(i,j,k-1)];
+		p[idx(i,j,k)] = 0.f;
+	    }
+	}
+    }
+    setBoundary(div);
+    setBoundary(p);
+    
+    // how do a and c terms work here
+    linSolve(p, div, 1, 4);
+    for (int i = 1; i < width - 1; ++i){
+        for (int j = 1; j < height - 1; ++j){
+            for (int k = 1; k < depth - 1; ++k){
+	        // account for scale factor here too
+	        ux[idx(i,j,k)] -= 0.5f * (p[idx(i+1,j,k)] - p[idx(i-1,j,k)]);    
+		uy[idx(i,j,k)] -= 0.5f * (p[idx(i,j+1,k)] - p[idx(i,j-1,k)]);
+		uz[idx(i,j,k)] -= 0.5f * (p[idx(i,j,k+1)] - p[idx(i,j,k-1)]);
+	    }
+        }
+    }
+    setBoundary(ux);
+    setBoundary(uy);
+    setBoundary(uz);
 }
 
 // void FluidSolver::addForce(float *f, float dt, int flag)
