@@ -29,6 +29,8 @@ class Solver3D
 	float *vx0;
 	float *vy0;
 	float *vz0;
+	
+	glm::vec3 *particles;
 
 	// we may not need these
 	float *v[3];    // current velocity 
@@ -40,8 +42,14 @@ class Solver3D
 	float *d;     // density
 	float *d0;
 
-	inline int idx(int i, int j, int k){ return i + width * (j + height * k); }
+	inline int idx(int i, int j, int k){ return i + (width * (j + (height * k))); }
+	inline int* idx_3d(int idx){ //TODO: return like glm::vec3 or something?
+		return [idx % width, (idx / width) % height, idx / (width * height)];
+	}
 
+	void initialize_particles();
+	glm::vec3 interpolate_velocity(glm::vec3 pos);
+	
 	void addSource(int flag);
 	void diffuse(float *f, float *f0, float k);
 	void advect(float *f, float *f0, float *v);
