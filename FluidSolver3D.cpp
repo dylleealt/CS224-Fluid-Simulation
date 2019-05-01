@@ -38,16 +38,21 @@ void FluidSolver::sStep()
 {
 }
 
-void FluidSolver::addForce(float *fint flag)
+void FluidSolver::addForce(float *f, float dt, int flag)
 {
     if (flag){
+	float *vx = f[0];
+	float *vy = f[1];
+	float *vz = f[2];
         // add gravity
 	for (int i = 0; i < totalSize; ++i){
 	    // may need to adjust gravitational constant later due to units
-            vz[i] = vz0[i] + -9.8f * dt;
+            vz[i] -= 9.8f * dt;
 	}
 	switch (flag){
-            case 1: // add swirl
+	    case 1: // do nothing, only gravity
+	        break;
+            case 2: // add swirl
 		int relx, rely;
 		int cx = width / 2, cy = height / 2;
 	        for (int i = 0; i < width; ++i){
