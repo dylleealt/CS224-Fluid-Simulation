@@ -12,11 +12,12 @@ class FluidSolver
 
     private:
       
-        void addSource(int flag);
-        void diffuse(float *f, float *f0, float k);
-        void advect(float *f, float *f0, float *v);
-        void project(float *f, float *f0);
-        void dissipate(float *f, float *f0);
+	void addForce(float *f, float dt, int flag);
+        void addSource(float *f, int flag);
+        void advect(float *f, float *f0, float **v);
+        void diffuse(float *f, float *f0, float k, float dt);
+        void project(float *f, float *f0, float dt);
+        void dissipate(float *f, float *f0, float a, float dt);
 }
 
 #endif

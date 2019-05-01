@@ -14,13 +14,9 @@ FluidSolver::~FluidSolver()
 
 void FluidSolver::vStep()
 {
-    SWAP(vx, vx0);
-    SWAP(vy, vy0);
-    SWAP(vz, vz0);
+    SWAP(v, v0);
     addForce(1);
-    SWAP(vx, vx0);
-    SWAP(vy, vy0);
-    SWAP(vz, vz0);
+    SWAP(v, v0);
     advect(vx, vx0)
     advect(vy, vy0)
     advect(vz, vz0)
@@ -42,7 +38,7 @@ void FluidSolver::sStep()
 {
 }
 
-void FluidSolver::addSource(int flag)
+void FluidSolver::addForce(float *fint flag)
 {
     if (flag){
         // add gravity
