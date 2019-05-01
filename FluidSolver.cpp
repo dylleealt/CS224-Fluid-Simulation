@@ -1,14 +1,14 @@
-#include "Solver3D.h"
+#include "FluidSolver.h"
 
 #include <cmath>
 
 #define SWAP(f, f0) {float *tmp=f; f=f0; f0=tmp;}
 
-Solver3D::Solver3D()
+FluidSolver::FluidSolver()
 {
 }
 
-Solver3D::~Solver3D()
+FluidSolver::~FluidSolver()
 {
     delete vx;
     delete vy;
@@ -22,7 +22,7 @@ Solver3D::~Solver3D()
     delete d0;
 }
 
-void Solver3D::init()
+void FluidSolver::init()
 {
     width = 100;
     height = 100;
@@ -53,7 +53,7 @@ void Solver3D::init()
     d0 = new float [totalSize];
 }
 
-void Solver3D::reset()
+void FluidSolver::reset()
 {
     for (int i = 0; i < totalSize; ++i){
          vx[i] = 0.f;
@@ -64,12 +64,12 @@ void Solver3D::reset()
     }
 }
 
-void Solver3D::vStep()
+void FluidSolver::vStep()
 {
     SWAP(vx, vx0);
     SWAP(vy, vy0);
     SWAP(vz, vz0);
-    addForce(1);	
+    addForce(1);
     SWAP(vx, vx0);
     SWAP(vy, vy0);
     SWAP(vz, vz0);
@@ -90,11 +90,11 @@ void Solver3D::vStep()
     project(vz, vz0);
 }
 
-void Solver3D::sStep()
+void FluidSolver::sStep()
 {
 }
 
-void Solver3D::addSource(int flag)
+void FluidSolver::addSource(int flag)
 {
     if (flag){
         // add gravity
