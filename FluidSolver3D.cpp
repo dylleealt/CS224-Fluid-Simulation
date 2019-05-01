@@ -100,9 +100,28 @@ void FluidSolver::advect(float *u, float *u0, float **v, dt)
     // set boundary
 }
 
+void FluidSolver::linSolve(float *u, float *u0, float a, float c)
+{
+    int numIterations = 20;
+    for (int t = 0; t < numIterations; ++t){
+        for (int i = 1; i < width - 1; ++i){
+	    for (int j = 1; j < height - 1; ++j){
+	        for (int k = 1; k < depth - 1; ++k){
+	            u[idx(i,j,k)] = (u0[idx(i,j,k)] + a * (
+					    u[idx(i-1,j,k)] + u[idx(i+1,j,k)] +
+					    u[idx(i,j-1,k)] + u[idx(i,j+1,k)] +
+					    u[idx(i,j,k-1)] + u[idx(i,j,k+1)])) / c
+		}
+	    }
+	}
+    }
+}
+
 void FluidSolver::diffuse(float *u, float *u0, float k, float dt)
 {
-    float k1 = -dt * k /  
+    float a = k * dt * (width - 2) * (height - 2) * (depth - 2);
+    float c = 1 + 4 * a;
+    linSolve(u, u0, a, c);
 }
 
 // void FluidSolver::addForce(float *f, float dt, int flag)
