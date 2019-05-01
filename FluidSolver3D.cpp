@@ -38,38 +38,105 @@ void FluidSolver::sStep()
 {
 }
 
-void FluidSolver::addForce(float *f, float dt, int flag)
+void FluidSolver::addForce(float *u, float *f, float dt, int flag)
 {
-    if (flag){
-	float *vx = f[0];
-	float *vy = f[1];
-	float *vz = f[2];
-        // add gravity
-	for (int i = 0; i < totalSize; ++i){
-	    // may need to adjust gravitational constant later due to units
-            vz[i] -= 9.8f * dt;
-	}
-	switch (flag){
-	    case 1: // do nothing, only gravity
-	        break;
-            case 2: // add swirl
-		int relx, rely;
-		int cx = width / 2, cy = height / 2;
-	        for (int i = 0; i < width; ++i){
-                    for (int j = 0; j < height; ++j){
-                       relx = i - cx;
-		       rely = j - cy;
-		       radius = relx * rely; // not really, we'll fix this later
-		       // add an orthogonal vector to get swirl
-                       vx[i] = vx0[i] + (-rely * dt / radius);
-		       vy[i] = vy0[i] + (-relx * dt / radius);
-		    }
-		}
-		break;
+    switch (flag){
+	case 1: // only gravity
+	    for (int i = 0; i < totalSize; ++i){
+		// may need to adjust gravitational accel later due to units
+	        u[i] += -9.8f * dt;
+	    }
+	    break;
+	case 2: // only external force
+            for (int i = 0; i < totalSize; ++i){
+                u[i] += f[i] * dt;
+	    }
+	    break; 
+	case 3: // both gravity and external force
+	    for (int i = 0; i < totalSize; ++i){
+                u[i] += (f[i] - 9.8f) * dt;
+	    }
+	    break;
+	default: // do nothing
+    }
+}
+
+void FluidSolver::addSource(float *u, float *source, float dt, int flag)
+{
+    for (int i = 0; i < totalSize; ++i){
+        u[i] += source[i] * dt;
+    }
+}
+
+void FluidSolver::advect(float *u, float *u0, float **v, dt)
+{
+    int curIdx;
+    float x, y, z;
+
+    for (int i = 0; i < width; ++i){
+        for (int j = 0; j < height; ++j){
+            for (int k = 0; k < depth; ++k){
+	        x = i + 0.5f; 
+		y = j + 0.5f;
+		z = k + 0.5f;
+		curIdx = idx(i, j, k);
+		curPos = idx(x, y, z); // *D
+		// add interpolation here and segment time steps
+		// trace particle
+                prevX = x - v[0][curIdx] * dt;
+		prevY = y - v[1][curIdx] * dt;
+		prevZ = z - v[2][curIdx] * dt;
+		// clamp to boundaries
+		prevX = min(max(prevX, 0.f), width - 1);
+		prevY = min(max(prevY, 0.f), height - 1);
+		prevZ = min(max(prevZ, 0.f), depth - 1);
+		// update field
+		oldPos = idx(prevX, prevY, prevZ);
+		// add interpolation here
+		u[curIdx] = u0[oldPos];
+	    }
 	}
     }
-    // else no external forces
+    // set boundary
 }
+
+void FluidSolver::diffuse(float *u, float *u0, float k, float dt)
+{
+    float k1 = -dt * k /  
+}
+
+// void FluidSolver::addForce(float *f, float dt, int flag)
+// {
+//    if (flag){
+//	float *vx = f[0];
+//	float *vy = f[1];
+//	float *vz = f[2];
+//      // add gravity
+//	for (int i = 0; i < totalSize; ++i){
+//	    // may need to adjust gravitational constant later due to units
+//            vz[i] -= 9.8f * dt;
+//	}
+//	switch (flag){
+//	    case 1: // do nothing, only gravity
+//	        break;
+//            case 2: // add swirl
+//		int relx, rely;
+//		int cx = width / 2, cy = height / 2;
+//	        for (int i = 0; i < width; ++i){
+//                   for (int j = 0; j < height; ++j){
+//                     relx = i - cx
+//                     rely = j - cy;
+//		       radius = relx * rely; // not really, we'll fix this later
+//		       // add an orthogonal vector to get swirl
+//                     vx[i] = vx0[i] + (-rely * dt / radius);
+//		       vy[i] = vy0[i] + (-relx * dt / radius);
+//		    }
+//		}
+//		break;
+//	}
+//  }
+//    // else no external forces
+//}
 
 void advect(float *f, float *f0)
 {
