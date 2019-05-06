@@ -2,7 +2,6 @@
 
 FluidGrid::FluidGrid()
 {
-    init();
 }
 
 FluidGrid::~FluidGrid()
@@ -21,42 +20,42 @@ FluidGrid::~FluidGrid()
 
 FluidGrid::init()
 {
-    width = 100;
-    height = 100;
-    depth = 100;
-    totalSize = width * height * depth;
-    visc = 0.3f;
-    kS = 0.5f;
-    aS = 0.3f;
-    dt = 1.f;
+    m_width = 100;
+    m_height = 100;
+    m_depth = 100;
+    m_totalCells = m_width * m_height * m_depth;
+    m_visc = 0.3f;
+    m_kS = 0.5f;
+    m_aS = 0.3f;
+    m_dt = 1.f;
 
-    vx = new float [totalSize];
-    vy = new float [totalSize];
-    vz = new float [totalSize];
-    vx0 = new float [totalSize];
-    vy0 = new float [totalSize];
-    vz0 = new float [totalSize];
+    vx = new float[m_totalCells];
+    vy = new float[m_totalCells];
+    vz = new float[m_totalCells];
+    vx0 = new float[m_totalCells];
+    vy0 = new float[m_totalCells];
+    vz0 = new float[m_totalCells];
 
-    v[0] = vx;
-    v[1] = vy;
-    v[2] = vz;
-    v0[0] = vx0;
-    v0[1] = vy0;
-    v0[2] = vz0;
+    m_v[0] = m_vx;
+    m_v[1] = m_vy;
+    m_v[2] = m_vz;
+    m_v0[0] = m_vx0;
+    m_v0[1] = m_vy0;
+    m_v0[2] = m_vz0;
 
-    p = new float [totalSize];
-    p0 = new float [totalSize];
-    d = new float [totalSize];
-    d0 = new float [totalSize];
+    m_p = new float[m_totalCells];
+    m_p0 = new float[m_totalCells];
+    m_d = new float[m_totalCells];
+    m_d0 = new float[m_totalCells];
 }
 
 FluidGrid::reset()
 {
-    for (int i = 0; i < totalSize; ++i){
-         vx[i] = 0.f;
-         vy[i] = 0.f;
-         vz[i] = 0.f;
-         p[i] = 0.f;
-         d[i] = 0.f;
+    for (int i = 0; i < m_totalCells; ++i){
+         m_vx[i] = 0.f;
+         m_vy[i] = 0.f;
+         m_vz[i] = 0.f;
+         m_p[i] = 0.f;
+         m_d[i] = 0.f;
     }
 }
