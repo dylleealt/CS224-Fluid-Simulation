@@ -130,27 +130,27 @@ float FluidSolver::interpolate(float *u, float x, float y, float z)
           );
 }
 
-void FluidSolver::setBoundary(float *u, int flag)
+void FluidSolver::setBoundary(float *u, int b)
 {
     // along x-axis
     for (int y = 1; y < m_ny; ++y){
         for (int z = 1; z < m_nz; ++z){
-            u[idx(0, y, z)] = (flag == 0) ? -u[idx(1, y, z)] : u[idx(1, y, z)];
-            u[idx(m_nx, y, z)] = (flag == 0) ? -u[idx(m_nx - 1, y, z)] : u[idx(m_nx - 1, y, z)];
+            u[idx(0, y, z)] = (b == 1) ? -u[idx(1, y, z)] : u[idx(1, y, z)];
+            u[idx(m_nx, y, z)] = (b == 1) ? -u[idx(m_nx - 1, y, z)] : u[idx(m_nx - 1, y, z)];
         }
     }
     // along y-axis
     for (int x = 1; x < m_nx; ++x){
         for (int z = 1; z < m_nz; ++z){
-            u[idx(x, 0, z)] = (flag == 1) ? -u[idx(x, 1, z)] : u[idx(x, 1, z)];
-            u[idx(x, m_ny, z)] = (flag == 1) ? -u[idx(x, m_ny - 1, z)] : u[idx(x, m_ny - 1, z)];
+            u[idx(x, 0, z)] = (b == 2) ? -u[idx(x, 1, z)] : u[idx(x, 1, z)];
+            u[idx(x, m_ny, z)] = (b == 2) ? -u[idx(x, m_ny - 1, z)] : u[idx(x, m_ny - 1, z)];
         }
     }
     // along z-axis
     for (int x = 1; x < m_nx; ++x){
         for (int y = 1; y < m_ny; ++y){
-            u[idx(x, y, 0)] = (flag == 2) ? -u[idx(x, y, 1)] : u[idx(x, y, 1)];
-            u[idx(x, y, m_nz)] = (flag == 2) ? -u[idx(x, y, m_nz - 1)] : u[idx(x, y, m_nz)];
+            u[idx(x, y, 0)] = (b == 3) ? -u[idx(x, y, 1)] : u[idx(x, y, 1)];
+            u[idx(x, y, m_nz)] = (b == 3) ? -u[idx(x, y, m_nz - 1)] : u[idx(x, y, m_nz)];
         }
     }
     // corners
@@ -194,7 +194,7 @@ void FluidSolver::addSource(float *u, float *source, float dt)
     }
 }
 
-void FluidSolver::advect(float *u, float *u0, float **v, float dt)
+void FluidSolver::advect(float *u, float *u0, float **v, float dt, int b)
 {
     int curIdx;
     float x, y, z, prevX, prevY, prevZ;
@@ -222,6 +222,7 @@ void FluidSolver::advect(float *u, float *u0, float **v, float dt)
         }
     }
     // set boundary
+    setBoundary(u, b);
 }
 
 void FluidSolver::linSolve(float *u, float *u0, float a, float c, int b)
@@ -238,18 +239,18 @@ void FluidSolver::linSolve(float *u, float *u0, float a, float c, int b)
                 }
             }
         }
-    setBoundary(u);
+    setBoundary(u, b);
     }
 }
 
-void FluidSolver::diffuse(float *u, float *u0, float k, float dt)
+void FluidSolver::diffuse(float *u, float *u0, float k, float dt, int b)
 {
     float a = k * dt * (width - 2) * (height - 2) * (depth - 2);
     float c = 1 + 4 * a;
-    linSolve(u, u0, a, c);
+    linSolve(u, u0, a, c, b);
 }
 
-void FluidSolver::project(float *u, float *u0, float dt)
+void FluidSolver::project(float **v, float *p, float *div)
 {
     for (int i = 1; i < width - 1; ++i){
         for (int j = 1; j < height - 1; ++j){
@@ -262,8 +263,8 @@ void FluidSolver::project(float *u, float *u0, float dt)
             }
         }
     }
-    setBoundary(div);
-    setBoundary(p);
+    setBoundary(div, 0);
+    setBoundary(p, 0);
 
     // how do a and c terms work here
     linSolve(p, div, 1, 4);
@@ -277,7 +278,7 @@ void FluidSolver::project(float *u, float *u0, float dt)
             }
         }
     }
-    setBoundary(ux);
-    setBoundary(uy);
-    setBoundary(uz);
+    setBoundary(ux, 1);
+    setBoundary(uy, 2);
+    setBoundary(uz, 3);
 }

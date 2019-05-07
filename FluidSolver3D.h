@@ -87,7 +87,7 @@ class FluidSolver
         void advect(float *u, float *u0, float **v, float dt, int b);
         void linSolve(float *u, float *u0, float a, float c, int b);
         void diffuse(float *u, float *u0, float k, float dt, int b);
-        void project(float *u, float *u0, float dt);
+        void project(float **v, float *p, float *div);
         void dissipate(float *u, float *u0, float rate, float dt);
 }
 
