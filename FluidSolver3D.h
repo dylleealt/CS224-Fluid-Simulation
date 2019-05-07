@@ -9,13 +9,16 @@ class FluidSolver
         void init();
         void reset();
 
-        float getWidth(){ return m_width; }
-        float getHeight(){ return m_height; }
-        float getDepth(){ return m_depth; }
         int getNumCols(){ return m_numCols; }
         int getNumRows(){ return m_numRows; }
         int getNumLayers(){ return m_numLayers; }
         int geNumCells(){ return m_numCells; }
+        float getWidth(){ return m_width; }
+        float getHeight(){ return m_height; }
+        float getDepth(){ return m_depth; }
+        float getHx() { return m_hx; }
+        float getHy() { return m_hy; }
+        float getHz() { return m_hz; }
         float getViscosity(){ return m_visc; }
         float getDiffusionRate(){ return m_kS; }
         float getDissipationRate(){ return m_aS; }
@@ -25,11 +28,11 @@ class FluidSolver
         float *getPressure(){ return m_p; }
         float *getDensity(){ return m_d; }
 
-
         void vStep();
         void sStep();
 
-        inline int idx(int i, int j, int k){ return i + width * (j + height * k); }
+        inline int idx(int i, int j, int k){ return i + m_numCols * (j + m_numRows * k); }
+        float interpolate(float *u, float x, float y, float z);
 
     private:
         int m_numCols;     // num cells along each dimension
@@ -47,6 +50,9 @@ class FluidSolver
         float m_hx;        // size of voxel in each dimension
         float m_hy;
         float m_hz;
+        float m_minX, m_maxX; // spatial boundaries
+        float m_minY, m_maxY;
+        float m_minZ, m_maxZ;
 
         // constants
         float m_visc;      // viscosity
