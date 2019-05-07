@@ -77,7 +77,7 @@ class FluidSolver
 
         // scalar fields
         float *m_p;        // pressure
-        float *m_p0;
+        float *m_div;
         float *m_d;        // density
         float *m_d0;
 

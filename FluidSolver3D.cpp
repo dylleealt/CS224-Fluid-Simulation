@@ -70,7 +70,7 @@ void FluidSolver::init(int x, int y, int z, float width, float height, float dep
     m_v0[2] = m_vz0;
 
     m_p = new float[m_numCells];
-    m_p0 = new float[m_numCells];
+    m_div = new float[m_numCells];
     m_d = new float[m_numCells];
     m_d0 = new float[m_numCells];
 }
@@ -227,7 +227,7 @@ void FluidSolver::advect(float *u, float *u0, float **v, float dt, int b)
 
 void FluidSolver::linSolve(float *u, float *u0, float a, float c, int b)
 {
-    int numIterations = 20;
+    static int numIterations = 20;
     for (int t = 0; t < numIterations; ++t){
         for (int i = 1; i < width - 1; ++i){
             for (int j = 1; j < height - 1; ++j){
@@ -245,20 +245,21 @@ void FluidSolver::linSolve(float *u, float *u0, float a, float c, int b)
 
 void FluidSolver::diffuse(float *u, float *u0, float k, float dt, int b)
 {
-    float a = k * dt * (width - 2) * (height - 2) * (depth - 2);
+    float a = k * dt * (m_nx - 1) * (m_ny - 1) * (m_nz - 1);
     float c = 1 + 4 * a;
     linSolve(u, u0, a, c, b);
 }
 
 void FluidSolver::project(float **v, float *p, float *div)
 {
+    float *vx = v[0], *vy = v[1], *vz = v[2];
     for (int i = 1; i < width - 1; ++i){
         for (int j = 1; j < height - 1; ++j){
             for (int k = 1; k < depth - 1; ++k){
                 // missing scale factor for divergence
-                div[idx(i,j,k)] = -0.5f * (ux[idx(i+1,j,k)] - ux[idx(i-1,j,k)]
-                + uy[idx(i,j+1,k)] - uy[idx(i,j-1,k)]
-                + uz[idx(i,j,k+1)] - uz[idx(i,j,k-1)];
+                div[idx(i,j,k)] = -0.5f * (vx[idx(i+1,j,k)] - vx[idx(i-1,j,k)]
+                    + vy[idx(i,j+1,k)] - vy[idx(i,j-1,k)]
+                    + vz[idx(i,j,k+1)] - vz[idx(i,j,k-1)]);
                 p[idx(i,j,k)] = 0.f;
             }
         }
@@ -272,9 +273,9 @@ void FluidSolver::project(float **v, float *p, float *div)
         for (int j = 1; j < height - 1; ++j){
             for (int k = 1; k < depth - 1; ++k){
                 // account for scale factor here too
-                ux[idx(i,j,k)] -= 0.5f * (p[idx(i+1,j,k)] - p[idx(i-1,j,k)]);
-                uy[idx(i,j,k)] -= 0.5f * (p[idx(i,j+1,k)] - p[idx(i,j-1,k)]);
-                uz[idx(i,j,k)] -= 0.5f * (p[idx(i,j,k+1)] - p[idx(i,j,k-1)]);
+                vx[idx(i,j,k)] -= 0.5f * (p[idx(i+1,j,k)] - p[idx(i-1,j,k)]);
+                vy[idx(i,j,k)] -= 0.5f * (p[idx(i,j+1,k)] - p[idx(i,j-1,k)]);
+                vz[idx(i,j,k)] -= 0.5f * (p[idx(i,j,k+1)] - p[idx(i,j,k-1)]);
             }
         }
     }
