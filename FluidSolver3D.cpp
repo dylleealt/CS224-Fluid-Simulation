@@ -50,7 +50,7 @@ void FluidSolver::init(int x, int y, int z, float width, float height, float dep
     m_visc = visc;
     m_kS = diff;
     m_aS = rate;
-    m_dt = dit;
+    m_dt = dt;
 
     m_vx = new float[m_numCells];
     m_vy = new float[m_numCells];
@@ -84,7 +84,7 @@ void FluidSolver::reset()
     memset(m_p, 0, sizeof(float) * m_numCells);
     memset(m_d, 0, sizeof(float) * m_numCells);
 
-    // guarnateed to work but is slower
+    // guaranteed to work but is slower
     /*
     for (int i = 0; i < m_numCells; ++i){
          m_vx[i] = 0.f;
@@ -127,7 +127,7 @@ float FluidSolver::interpolate(float *u, float x, float y, float z)
               MIX(t, u[idx(i0 + 1, j0, k0)], u[idx(i0 + 1, j0, k0 + 1)]),
               MIX(t, u[idx(i0 + 1, j0 + 1, k0)], u[idx(i0 + 1, j0 + 1, k0 + 1)])
             )
-          )
+          );
 }
 
 void FluidSolver::setBoundary(float *u, int flag)
@@ -224,7 +224,7 @@ void FluidSolver::advect(float *u, float *u0, float **v, float dt)
     // set boundary
 }
 
-void FluidSolver::linSolve(float *u, float *u0, float a, float c)
+void FluidSolver::linSolve(float *u, float *u0, float a, float c, int b)
 {
     int numIterations = 20;
     for (int t = 0; t < numIterations; ++t){

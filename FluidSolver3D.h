@@ -1,6 +1,7 @@
 #ifndef __FLUIDSOLVER_H__
 #define __FLUIDSOLVER_H__
 
+
 class FluidSolver
 {
     public:
@@ -80,11 +81,12 @@ class FluidSolver
         float *m_d;        // density
         float *m_d0;
 
-        void setBoundary(float *u);
+        void setBoundary(float *u, int b);
         void addForce(float *u, float *f, float dt, int flag);
         void addSource(float *u, float *s, float dt);
-        void advect(float *u, float *u0, float **v, float dt);
-        void diffuse(float *u, float *u0, float k, float dt);
+        void advect(float *u, float *u0, float **v, float dt, int b);
+        void linSolve(float *u, float *u0, float a, float c, int b);
+        void diffuse(float *u, float *u0, float k, float dt, int b);
         void project(float *u, float *u0, float dt);
         void dissipate(float *u, float *u0, float rate, float dt);
 }
