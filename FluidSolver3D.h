@@ -12,10 +12,10 @@ class FluidSolver
         float getWidth(){ return m_width; }
         float getHeight(){ return m_height; }
         float getDepth(){ return m_depth; }
-        int getNumRows(){ return m_numRows; }
         int getNumCols(){ return m_numCols; }
+        int getNumRows(){ return m_numRows; }
         int getNumLayers(){ return m_numLayers; }
-        int getTotalCells(){ return m_totalCells; }
+        int geNumCells(){ return m_numCells; }
         float getViscosity(){ return m_visc; }
         float getDiffusionRate(){ return m_kS; }
         float getDissipationRate(){ return m_aS; }
@@ -26,20 +26,26 @@ class FluidSolver
         float *getDensity(){ return m_d; }
 
 
-        void vStep();    // move a vector field forward one time step
-        void sStep();    // move a scalar field forward one time step
+        void vStep();
+        void sStep();
 
         inline int idx(int i, int j, int k){ return i + width * (j + height * k); }
 
     private:
+        int m_numCols;     // num cells along each dimension
+        int m_numRows;
+        int m_numLayers;
+        int m_numCells;    // total number of cells
+
         // origin is assumed to be at (0,0,0)
-        float m_width;
+        float m_width;     // simulation space in each dimension
         float m_height;
         float m_depth;
-        int m_numCols;     // num cells along width
-        int m_numRows;     // num cells along height
-        int m_numLayers;   // num cells along depth
-        int m_totalCells;  // total number of cells
+        float m_hx;        // size of voxel in each dimension
+        float m_hy;
+        float m_hz;
+
+        // constants
         float m_visc;      // viscosity
         float m_kS;        // diffusion constant
         float m_aS;        // dissipation rate
@@ -52,9 +58,12 @@ class FluidSolver
         float *m_vx0;
         float *m_vy0;
         float *m_vz0;
+        float *m_cx;       // curl compoments
+        float *m_cy;
+        float *m_cz;
 
-        float *m_v[NDIM];     // current velocity
-        float *m_v0[NDIM];    // old velocity
+        float *m_v[NDIM];  // current velocity
+        float *m_v0[NDIM]; // old velocity
 
         // scalar fields
         float *m_p;        // pressure
