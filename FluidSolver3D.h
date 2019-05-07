@@ -35,6 +35,9 @@ class FluidSolver
         int m_numCols;     // num cells along each dimension
         int m_numRows;
         int m_numLayers;
+        int m_nx;          // num of cells not including the boundaries
+        int m_ny;
+        int m_nz;
         int m_numCells;    // total number of cells
 
         // origin is assumed to be at (0,0,0)

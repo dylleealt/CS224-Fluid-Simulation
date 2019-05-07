@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#define SWAP(f, f0) {auto tmp=f; f=f0; f0=tmp;}
+#define SWAP(u, u0) {auto tmp=u; u=u0; u0=tmp;}
 
 FluidSolver::FluidSolver()
 {
@@ -27,11 +27,17 @@ FluidSolver::init(int x, int y, int z, float width, float height, float depth, f
     m_numCols = x;
     m_numRows = y;
     m_numLayers = z;
+    m_nx = x - 1;
+    m_ny = y - 1;
+    m_nz = z - 1;
     m_numCells = m_numCols * m_numRows * numLayers;
 
     m_width = width;
     m_height = height;
     m_depth = depth;
+    m_hx = m_width / m_numCols;
+    m_hy = m_height / m_numRows;
+    m_hz = m_depth / m_numLayers;
 
     m_visc = visc;
     m_kS = diff;
@@ -70,7 +76,7 @@ FluidSolver::reset()
     memset(m_p, 0, sizeof(float) * m_numCells);
     memset(m_d, 0, sizeof(float) * m_numCells);
 
-    // guarnateed to work but is much slower
+    // guarnateed to work but is slower
     /*
     for (int i = 0; i < m_numCells; ++i){
          m_vx[i] = 0.f;
@@ -84,27 +90,44 @@ FluidSolver::reset()
 
 void FluidSolver::vStep()
 {
-    addForce();
-    SWAP();
-    advect();
-    SWAP();
-    diffuse();
-    SWAP();
-    project();
 }
 
 void FluidSolver::sStep()
 {
-    addSource();
-    SWAP();
-    advect();
-    SWAP();
-    diffuse();
 }
 
-void FluidSolver::setBoundary(float *u)
+void FluidSolver::setBoundary(float *u, int flag)
 {
-
+    // along x-axis
+    for (int y = 0; y < m_ny; ++y){
+        for (int z = 0; z < m_nz; ++z){
+            u[idx(0, y, z)] = (flag == 0) ? -u[idx(1, y, z)] : u[idx(1, y, z)];
+            u[idx(m_nx, y, z)] = (flag == 0) ? -u[idx(m_nx - 1, y, z)] : u[idx(m_nx - 1, y, z)];
+        }
+    }
+    // along y-axis
+    for (int x = 0; x < m_nx; ++x){
+        for (int z = 0; z < m_nz; ++z){
+            u[idx(x, 0, z)] = (flag == 1) ? -u[idx(x, 1, z)] : u[idx(x, 1, z)];
+            u[idx(x, m_ny, z)] = (flag == 1) ? -u[idx(x, m_ny - 1, z)] : u[idx(x, m_ny - 1, z)];
+        }
+    }
+    // along z-axis
+    for (int x = 0; x < m_nx; ++x){
+        for (int y = 0; y < m_ny; ++y){
+            u[idx(x, y, 0)] = (flag == 2) ? -u[idx(x, y, 1)] : u[idx(x, y, 1)];
+            u[idx(x, y, m_nz)] = (flag == 2) ? -u[idx(x, y, m_nz - 1)] : u[idx(x, y, m_nz)];
+        }
+    }
+    // corners
+    u[idx(0, 0, 0)] = (u[idx(1, 0, 0)] + u[idx(0, 1, 0)] + u[idx(0, 0, 1)]) / 3;
+    u[idx(m_nx, 0, 0)] = (u[idx(m_nx - 1, 0, 0)] + u[idx(m_nx, 1, 0)] + u[idx(m_nx, 0, 1)]) / 3;
+    u[idx(0, m_ny, 0)] = (u[idx(1, m_ny, 0)] + u[idx(0, m_ny - 1, 0)] + u[idx(0, m_ny, 1)]) / 3;
+    u[idx(0, 0, m_nz)] = (u[idx(1, 0, m_nz)] + u[idx(0, 1, m_nz)] + u[idx(0, 0, m_nz - 1)]) / 3;
+    u[idx(m_nx, m_ny, 0)] = (u[idx(m_nx - 1, m_ny, 0)] + u[idx(m_nx, m_ny - 1, 0)] + u[idx(m_nx, m_nx, 1)]) / 3;
+    u[idx(m_nx, 0, m_nz)] = (u[idx(m_nx - 1, 0, m_nz)] + u[idx(m_nx, 1, m_nz)] + u[idx(m_nx, 0, m_nz - 1)]) / 3;
+    u[idx(0, m_ny, m_nz)] = (u[idx(1, m_ny, m_nz)] + u[idx(0, m_ny - 1, m_nz)] + u[idx(0, m_ny, m_nz - 1)]) / 3;
+    u[idx(m_nx, m_ny, m_nz)] = (u[idx(m_nx - 1, m_ny, m_nz)] + u[idx(m_nx, m_ny - 1, m_nz0)] + u[idx(m_nx, m_ny, m_nz - 1)]) / 3;
 }
 
 void FluidSolver::addForce(float *u, float *f, float dt, int flag)
