@@ -1,0 +1,141 @@
+
+glm::vec3 particles[];
+//initialize one particle in each grid cell
+//particles have position --> need to go from position to velocity grid index
+
+void initialize_particles(int width, int height, int depth) {
+	int particle_index = 0;
+	for (int i = 0; i < width; i++) {
+		for (int j = 0; j < height; j++) {
+			for (int k = 0; k < depth; k++) {
+				particles[particle_index] = glm::vec3(i, j, k);
+				particle_index++;
+			}
+		}
+	}
+}
+
+glm::vec3 interpolate_velocity(glm::vec3 pos) {
+	double x0 = floor(pos.x);
+	double x1 = ceil(pos.x);
+	double y0 = floor(pos.y);
+	double y1 = ceil(pos.y);
+	double z0 = floor(pos.z);
+	double z1 = ceil(pos.z);
+	
+	double xd = (pos.x - x0) / (x1 - x0);
+	double yd = (pos.y - y0) / (y1 - y0);
+	double zd = (pos.z - z0) / (z1 - z0);
+	
+	glm::vec3 c00 = (glm::vec3(vx[x0], vy[y0], vz[z0]) * (1.0 - xd)) + (glm::vec3(vx[x1], vy[y0], vz[z0]) * xd);
+	glm::vec3 c01 = (glm::vec3(vx[x0], vy[y0], vz[z1]) * (1.0 - xd)) + (glm::vec3(vx[x1], vy[y0], vz[z1]) * xd);
+	glm::vec3 c10 = (glm::vec3(vx[x0], vy[y1], vz[z0]) * (1.0 - xd)) + (glm::vec3(vx[x1], vy[y1], vz[z0]) * xd);
+	glm::vec3 c11 = (glm::vec3(vx[x0], vy[y1], vz[z1]) * (1.0 - xd)) + (glm::vec3(vx[x1], vy[y1], vz[z1]) * xd);
+	
+	glm::vec3 c0 = (c00 * (1.0 - yd)) + (c10 * yd);
+	glm::vec3 c1 = (c01 * (1.0 - yd)) + (c11 * yd);
+	
+	return (c0 * (1.0 - zd)) + (c1 * zd);
+}
+
+void update_particles() {
+	for (int i = 0; i < particles.size(); i++) {
+		position = particles[i];
+		particles[i] = particles[i] + interpolate_velocity(particles[i]);
+	}
+}
+
+
+
+
+int closest_particle(glm::vec3 x) {
+	//TODO: return the index of the particle closest to X
+}
+
+double square(double n) {
+	return n * n;
+
+
+double phi_p(glm::vec3 x) {
+	r = 1; //TODO: adjust value of r to something that makes sense
+	x_p = particles[closest_particle(x)];
+	return sqrt(square(x[0] - x_p[0]) + square(x[1] - x_p[1]) + square(x[2] - x_p[2])) - r;
+}
+
+//TODO: normalize phi so that abs(phi(x)) equals distance from x to closest point on zero isocontour
+
+double S(double phi) {
+	double delta_tau = 1; //TODO: adjust this (and also confirm that it's the timestep)
+	return phi / sqrt(square(phi) + square(delta_tau));
+}
+
+double phi_n 
+
+
+phi_t + (u * phi_x) + (v * phi_y) = 0.0;
+phi_t + S(phi_0)(sqrt(square(phi_x) + square(phi_y)) - 1.0) = 0.0;
+
+
+double[][][] phi_values;
+
+phi_i0-2 /*x*/ = phi_values[x-2][y][z];
+
+double phi_offset(int x, int y, int z, int offset, char axis) {
+	if (axis == 'x') {
+		return phi_values[x+offset][y][z];
+	} else if (axis == 'y') {
+		return phi_values[x][y+offset][z];
+	} else {
+		return phi_values[x][y][z+offset];
+	}
+}
+
+//grid cell index of phi, partial derivative of phi WRT axis, which axis is to be used, fluid velocity at grid cell in the given axis
+double phi_axis(int x, int y, int z, double delta, char axis, double vel) {
+	if (vel == 0) {
+		return 0.0;
+	} else {
+		double v1;
+		double v2;
+		double v3;
+		double v4;
+		double v5;
+		if (vel > 0) {
+			v1 = (phi_offset(x, y, z, -2, axis) - phi_offset(x, y, z, -3, axis)) / delta;
+			v2 = (phi_offset(x, y, z, -1, axis) - phi_offset(x, y, z, -2, axis)) / delta;
+			v3 = (phi_offset(x, y, z, 0, axis) - phi_offset(x, y, z, -1, axis)) / delta;
+			v4 = (phi_offset(x, y, z, 1, axis) - phi_offset(x, y, z, 0, axis)) / delta;
+			v5 = (phi_offset(x, y, z, 2, axis) - phi_offset(x, y, z, 1, axis)) / delta;
+		} else {
+			v1 = (phi_offset(x, y, z, 3, axis) - phi_offset(x, y, z, 2, axis)) / delta;
+			v2 = (phi_offset(x, y, z, 2, axis) - phi_offset(x, y, z, 1, axis)) / delta;
+			v3 = (phi_offset(x, y, z, 1, axis) - phi_offset(x, y, z, 0, axis)) / delta;
+			v4 = (phi_offset(x, y, z, 0, axis) - phi_offset(x, y, z, -1, axis)) / delta;
+			v5 = (phi_offset(x, y, z, -1, axis) - phi_offset(x, y, z, -2, axis)) / delta;
+		}
+		double epsilon = 0.00001;
+		double a1 = 0.1 * (1.0 / square(epsilon + S1(v1, v2, v3)));
+		double a2 = 0.6 * (1.0 / square(epsilon + S2(v2, v3, v4)));
+		double a3 = 0.3 * (1.0 / square(epsilon + S3(v3, v4, v5)));
+
+		double a_sum = a1 + a2 + a3;
+
+		double w1 = a1 / a_sum;
+		double w2 = a2 / a_sum;
+		double w3 = a3 / a_sum;
+	
+		return vel * (w1 * ((v1 / 3.0) - ((7.0 * v2) / 6.0) + ((11.0 * v3) / 6.0)))
+				   + (w2 * (((-1.0 * v2) / 6.0) + ((5.0 * v3) / 6.0) + (v4 / 3.0)))
+				   + (w3 * ((v3 / 3.0) + ((5.0 * v4) / 6.0) - (v5 / 6.0)));
+	}
+}
+//phi_t + (u*phi_x + v*phi_y + w*phi_z) = 0 --> phi_t = -(u*phi_x + v*phi_y + w*phi_z)
+double phi_t(int x, int y, int z, glm::vec3 del, glm::vec3 vel) {
+	return -1.0 * (phi_axis(x, y, z, del[0], 'x', vel[0]) + phi_axis(x, y, z, del[1], 'y', vel[1]) + phi_axis(x, y, z, del[2], 'z', vel[2]));
+}
+
+//TODO:
+- find gradient of implicit surface at a given grid point
+- type consistency (internally)
+- type consistency (with fluid solver)
+- 
