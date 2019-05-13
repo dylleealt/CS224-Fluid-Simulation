@@ -83,7 +83,10 @@ OTHER_FILES += \
     shaders/quad.vert \
     shaders/particles_update.frag \
     shaders/particles_draw.frag \
-    shaders/particles_draw.vert
+    shaders/particles_draw.vert \
+    shaders/fluids_update.frag \
+    shaders/fluids_draw.frag \
+    shaders/fluids_draw.vert
 
 RESOURCES += \
     shaders/shaders.qrc

@@ -21,12 +21,12 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
       m_quad(nullptr), m_sphere(nullptr),
       m_blurFBO1(nullptr), m_blurFBO2(nullptr),
       m_particlesFBO1(nullptr), m_particlesFBO2(nullptr),
-      m_firstPass(true), m_evenPass(true), m_numParticles(16000),
+      m_firstPass(true), m_evenPass(true), m_numParticles(15625),
       m_angleX(-0.5f), m_angleY(0.5f), m_zoom(4.f)
 {
-      m_sizeX = 50;
-      m_sizeY = 50;
-      m_sizeZ = 50;
+      m_sizeX = 25;
+      m_sizeY = 25;
+      m_sizeZ = 25;
       m_gridSize = m_sizeX * m_sizeY * m_sizeZ;
 }
 
@@ -90,6 +90,12 @@ void GLWidget::initializeGL() {
     m_quad->setAttribute(ShaderAttrib::TEXCOORD0, 2, 3*sizeof(GLfloat), VBOAttribMarker::DATA_TYPE::FLOAT, false);
     m_quad->buildVAO();
 
+    // fluid FBOs
+    glGenVertexArrays(1, &m_fluidsVAO);
+    m_fluidsFBO1 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_gridSize, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
+                                            TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
+    m_fluidsFBO2 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_gridSize, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
+                                            TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
     // We will use this VAO to draw our particles' triangles
     // It doesn't need any data associated with it, so we don't have to make a full VAO instance
     glGenVertexArrays(1, &m_particlesVAO);
@@ -98,12 +104,6 @@ void GLWidget::initializeGL() {
                                             TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
     m_particlesFBO2 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_numParticles, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
                                             TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
-    // fluid FBOs
-    // glGenVertexArrays(1, &m_fluidsVAO);
-    // m_fluidsFBO1 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_gridSize, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
-    //                                         TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
-    // m_fluidsFBO2 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_gridSize, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
-    //                                         TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
     // Print the max FBO dimension.
     GLint maxRenderBufferSize;
     glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE_EXT, &maxRenderBufferSize);
@@ -117,7 +117,7 @@ void GLWidget::paintGL() {
             drawBlur();
             break;
         case MODE_PARTICLES:
-            drawParticles();
+            drawFluidParticles();
             update();
             break;
 //        case MODE_FLUIDS:
