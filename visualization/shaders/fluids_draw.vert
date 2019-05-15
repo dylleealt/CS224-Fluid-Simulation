@@ -88,9 +88,9 @@ void main() {
     // TODO [Task 18] sample pos and vel textures
 
     // Calculate diameter based on age and lifetime
-    float diameter = 0.02;
-    diameter *= min(min(1.0, velAge.w / (0.1 * posTime.w)),
-                    min(1.0, abs(posTime.w - velAge.w) / (0.1 * posTime.w)));
+    float diameter = 0.03;
+//    diameter *= min(min(1.0, velAge.w / (0.1 * posTime.w)),
+//                    min(1.0, abs(posTime.w - velAge.w) / (0.1 * posTime.w)));
 
     // Calculate color based on particleID
     color = pickRainbowColor(float(particleID)/numParticles);

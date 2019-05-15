@@ -100,9 +100,9 @@ void GLWidget::initializeGL() {
     // It doesn't need any data associated with it, so we don't have to make a full VAO instance
     glGenVertexArrays(1, &m_particlesVAO);
     // TODO [Task 12] Create m_particlesFBO1 and 2 with std::make_shared
-    m_particlesFBO1 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_numParticles, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
+    m_particlesFBO1 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_gridSize, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
                                             TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
-    m_particlesFBO2 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_numParticles, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
+    m_particlesFBO2 = std::make_shared<FBO>(2, FBO::DEPTH_STENCIL_ATTACHMENT::NONE, m_gridSize, 1, TextureParameters::WRAP_METHOD::CLAMP_TO_EDGE,
                                             TextureParameters::FILTER_METHOD::NEAREST, GL_FLOAT);
     // Print the max FBO dimension.
     GLint maxRenderBufferSize;
@@ -237,8 +237,8 @@ void GLWidget::drawFluidParticles(){
 
     GLint loc = glGetUniformLocation(m_fluidsUpdateProgram, "firstPass");
     glUniform1f(loc, firstPass);
-    loc = glGetUniformLocation(m_fluidsUpdateProgram, "numParticles");
-    glUniform1i(loc, m_numParticles);
+    loc = glGetUniformLocation(m_fluidsUpdateProgram, "gridSize");
+    glUniform1i(loc, m_gridSize);
     loc = glGetUniformLocation(m_fluidsUpdateProgram, "prevPos");
     glUniform1i(loc, 0);
     loc = glGetUniformLocation(m_fluidsUpdateProgram, "prevVel");

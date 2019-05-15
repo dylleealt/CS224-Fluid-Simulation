@@ -1,13 +1,12 @@
 #ifndef __FLUIDSOLVER_H__
 #define __FLUIDSOLVER_H__
 
-
 class FluidSolver
 {
     public:
         FluidSolver();
         ~FluidSolver();
-        void init();
+        void init(int x, int y, int z, float width, float height, float depth, float visc, float diff, float rate, float dt);
         void reset();
 
         int getNumCols(){ return m_numCols; }
@@ -72,8 +71,8 @@ class FluidSolver
         float *m_cy;
         float *m_cz;
 
-        float *m_v[NDIM];  // current velocity
-        float *m_v0[NDIM]; // old velocity
+        float *m_v[3];  // current velocity
+        float *m_v0[3]; // old velocity
 
         // scalar fields
         float *m_p;        // pressure
@@ -89,6 +88,6 @@ class FluidSolver
         void diffuse(float *u, float *u0, float k, float dt, int b);
         void project(float **v, float *p, float *div);
         void dissipate(float *u, float *u0, float rate, float dt);
-}
+};
 
 #endif
