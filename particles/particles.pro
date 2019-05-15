@@ -30,14 +30,14 @@ SOURCES += \
     src/openglshape.cpp \
     cs123_lib/resourceloader.cpp \
     cs123_lib/errorchecker.cpp \
-    src/terrain.cpp \
     src/gl/datatype/VBO.cpp \
     src/gl/datatype/VBOAttribMarker.cpp \
     src/gl/datatype/VAO.cpp \
     src/gl/datatype/IBO.cpp \
     src/gl/GLDebug.cpp \
     ../glew-1.10.0/src/glew.c \
-    ../FluidSolver3D.cpp
+    ../FluidSolver3D.cpp \
+    src/particles.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -45,7 +45,6 @@ HEADERS += \
     src/openglshape.h \
     cs123_lib/resourceloader.h \
     cs123_lib/errorchecker.h \
-    src/terrain.h \
     src/gl/datatype/VBO.h \
     src/gl/datatype/VBOAttribMarker.h \
     src/gl/datatype/VAO.h \
@@ -53,7 +52,8 @@ HEADERS += \
     src/gl/shaders/ShaderAttribLocations.h \
     src/gl/GLDebug.h \
     ../glew-1.10.0/include/GL/glew.h \
-    ../FluidSolver3D.h
+    ../FluidSolver3D.h \
+    src/particles.h
 
 FORMS += src/mainwindow.ui
 

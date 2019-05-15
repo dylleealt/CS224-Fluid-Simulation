@@ -8,7 +8,7 @@
 #else
 #include <GL/glu.h>
 #endif
-#include "terrain.h"
+#include "particles.h"
 
 #define GLM_FORCE_RADIANS
 #include "glm/glm.hpp"            // glm::vec*, mat*, and basic glm functions
@@ -37,7 +37,7 @@ private:
     /** ID for the shader program. */
     GLuint m_program;
 
-    Terrain m_terrain;
+    Particles m_particles;
 
     glm::mat4 m_model, m_view, m_projection;
 

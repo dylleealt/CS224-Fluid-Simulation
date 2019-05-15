@@ -54,14 +54,14 @@ SOURCES       = src/mainwindow.cpp \
 		src/openglshape.cpp \
 		cs123_lib/resourceloader.cpp \
 		cs123_lib/errorchecker.cpp \
-		src/terrain.cpp \
 		src/gl/datatype/VBO.cpp \
 		src/gl/datatype/VBOAttribMarker.cpp \
 		src/gl/datatype/VAO.cpp \
 		src/gl/datatype/IBO.cpp \
 		src/gl/GLDebug.cpp \
 		../glew-1.10.0/src/glew.c \
-		../FluidSolver3D.cpp qrc_shaders.cpp \
+		../FluidSolver3D.cpp \
+		src/particles.cpp qrc_shaders.cpp \
 		moc_mainwindow.cpp \
 		moc_glwidget.cpp
 OBJECTS       = mainwindow.o \
@@ -70,7 +70,6 @@ OBJECTS       = mainwindow.o \
 		openglshape.o \
 		resourceloader.o \
 		errorchecker.o \
-		terrain.o \
 		VBO.o \
 		VBOAttribMarker.o \
 		VAO.o \
@@ -78,6 +77,7 @@ OBJECTS       = mainwindow.o \
 		GLDebug.o \
 		glew.o \
 		FluidSolver3D.o \
+		particles.o \
 		qrc_shaders.o \
 		moc_mainwindow.o \
 		moc_glwidget.o
@@ -161,7 +161,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		src/openglshape.h \
 		cs123_lib/resourceloader.h \
 		cs123_lib/errorchecker.h \
-		src/terrain.h \
 		src/gl/datatype/VBO.h \
 		src/gl/datatype/VBOAttribMarker.h \
 		src/gl/datatype/VAO.h \
@@ -169,20 +168,21 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		src/gl/shaders/ShaderAttribLocations.h \
 		src/gl/GLDebug.h \
 		../glew-1.10.0/include/GL/glew.h \
-		../FluidSolver3D.h src/mainwindow.cpp \
+		../FluidSolver3D.h \
+		src/particles.h src/mainwindow.cpp \
 		src/main.cpp \
 		src/glwidget.cpp \
 		src/openglshape.cpp \
 		cs123_lib/resourceloader.cpp \
 		cs123_lib/errorchecker.cpp \
-		src/terrain.cpp \
 		src/gl/datatype/VBO.cpp \
 		src/gl/datatype/VBOAttribMarker.cpp \
 		src/gl/datatype/VAO.cpp \
 		src/gl/datatype/IBO.cpp \
 		src/gl/GLDebug.cpp \
 		../glew-1.10.0/src/glew.c \
-		../FluidSolver3D.cpp
+		../FluidSolver3D.cpp \
+		src/particles.cpp
 QMAKE_TARGET  = particles
 DESTDIR       = 
 TARGET        = particles
@@ -372,8 +372,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents shaders/shaders.qrc $(DISTDIR)/
-	$(COPY_FILE) --parents src/mainwindow.h src/glwidget.h src/openglshape.h cs123_lib/resourceloader.h cs123_lib/errorchecker.h src/terrain.h src/gl/datatype/VBO.h src/gl/datatype/VBOAttribMarker.h src/gl/datatype/VAO.h src/gl/datatype/IBO.h src/gl/shaders/ShaderAttribLocations.h src/gl/GLDebug.h ../glew-1.10.0/include/GL/glew.h ../FluidSolver3D.h $(DISTDIR)/
-	$(COPY_FILE) --parents src/mainwindow.cpp src/main.cpp src/glwidget.cpp src/openglshape.cpp cs123_lib/resourceloader.cpp cs123_lib/errorchecker.cpp src/terrain.cpp src/gl/datatype/VBO.cpp src/gl/datatype/VBOAttribMarker.cpp src/gl/datatype/VAO.cpp src/gl/datatype/IBO.cpp src/gl/GLDebug.cpp ../glew-1.10.0/src/glew.c ../FluidSolver3D.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents src/mainwindow.h src/glwidget.h src/openglshape.h cs123_lib/resourceloader.h cs123_lib/errorchecker.h src/gl/datatype/VBO.h src/gl/datatype/VBOAttribMarker.h src/gl/datatype/VAO.h src/gl/datatype/IBO.h src/gl/shaders/ShaderAttribLocations.h src/gl/GLDebug.h ../glew-1.10.0/include/GL/glew.h ../FluidSolver3D.h src/particles.h $(DISTDIR)/
+	$(COPY_FILE) --parents src/mainwindow.cpp src/main.cpp src/glwidget.cpp src/openglshape.cpp cs123_lib/resourceloader.cpp cs123_lib/errorchecker.cpp src/gl/datatype/VBO.cpp src/gl/datatype/VBOAttribMarker.cpp src/gl/datatype/VAO.cpp src/gl/datatype/IBO.cpp src/gl/GLDebug.cpp ../glew-1.10.0/src/glew.c ../FluidSolver3D.cpp src/particles.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents src/mainwindow.ui $(DISTDIR)/
 
 
@@ -412,7 +412,7 @@ compiler_moc_header_clean:
 	-$(DEL_FILE) moc_mainwindow.cpp moc_glwidget.cpp
 moc_mainwindow.cpp: src/glwidget.h \
 		../glew-1.10.0/include/GL/glew.h \
-		src/terrain.h \
+		src/particles.h \
 		glm/glm.hpp \
 		glm/detail/_fixes.hpp \
 		glm/fwd.hpp \
@@ -507,7 +507,7 @@ moc_mainwindow.cpp: src/glwidget.h \
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/gpfs/main/home/dtian2/course/cs2240/final/particles -I/gpfs/main/home/dtian2/course/cs2240/final/particles/src -I/gpfs/main/home/dtian2/course/cs2240/final/particles/cs123_lib -I/gpfs/main/home/dtian2/course/cs2240/final/particles/glm -I/gpfs/main/home/dtian2/course/cs2240/final/glew-1.10.0/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtOpenGL -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/6 -I/usr/include/x86_64-linux-gnu/c++/6 -I/usr/include/c++/6/backward -I/usr/lib/gcc/x86_64-linux-gnu/6/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include src/mainwindow.h -o moc_mainwindow.cpp
 
 moc_glwidget.cpp: ../glew-1.10.0/include/GL/glew.h \
-		src/terrain.h \
+		src/particles.h \
 		glm/glm.hpp \
 		glm/detail/_fixes.hpp \
 		glm/fwd.hpp \
@@ -623,7 +623,7 @@ compiler_clean: compiler_rcc_clean compiler_moc_header_clean compiler_uic_clean
 mainwindow.o: src/mainwindow.cpp src/mainwindow.h \
 		src/glwidget.h \
 		../glew-1.10.0/include/GL/glew.h \
-		src/terrain.h \
+		src/particles.h \
 		glm/glm.hpp \
 		glm/detail/_fixes.hpp \
 		glm/fwd.hpp \
@@ -719,7 +719,7 @@ mainwindow.o: src/mainwindow.cpp src/mainwindow.h \
 main.o: src/main.cpp src/mainwindow.h \
 		src/glwidget.h \
 		../glew-1.10.0/include/GL/glew.h \
-		src/terrain.h \
+		src/particles.h \
 		glm/glm.hpp \
 		glm/detail/_fixes.hpp \
 		glm/fwd.hpp \
@@ -813,7 +813,7 @@ main.o: src/main.cpp src/mainwindow.h \
 
 glwidget.o: src/glwidget.cpp src/glwidget.h \
 		../glew-1.10.0/include/GL/glew.h \
-		src/terrain.h \
+		src/particles.h \
 		glm/glm.hpp \
 		glm/detail/_fixes.hpp \
 		glm/fwd.hpp \
@@ -922,7 +922,38 @@ errorchecker.o: cs123_lib/errorchecker.cpp cs123_lib/errorchecker.h \
 		../glew-1.10.0/include/GL/glew.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o errorchecker.o cs123_lib/errorchecker.cpp
 
-terrain.o: src/terrain.cpp src/terrain.h \
+VBO.o: src/gl/datatype/VBO.cpp src/gl/datatype/VBO.h \
+		../glew-1.10.0/include/GL/glew.h \
+		src/gl/datatype/VBOAttribMarker.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VBO.o src/gl/datatype/VBO.cpp
+
+VBOAttribMarker.o: src/gl/datatype/VBOAttribMarker.cpp src/gl/datatype/VBOAttribMarker.h \
+		../glew-1.10.0/include/GL/glew.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VBOAttribMarker.o src/gl/datatype/VBOAttribMarker.cpp
+
+VAO.o: src/gl/datatype/VAO.cpp src/gl/datatype/VAO.h \
+		../glew-1.10.0/include/GL/glew.h \
+		src/gl/datatype/VBO.h \
+		src/gl/datatype/IBO.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VAO.o src/gl/datatype/VAO.cpp
+
+IBO.o: src/gl/datatype/IBO.cpp src/gl/datatype/IBO.h \
+		../glew-1.10.0/include/GL/glew.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o IBO.o src/gl/datatype/IBO.cpp
+
+GLDebug.o: src/gl/GLDebug.cpp src/gl/GLDebug.h \
+		../glew-1.10.0/include/GL/glew.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLDebug.o src/gl/GLDebug.cpp
+
+glew.o: ../glew-1.10.0/src/glew.c ../glew-1.10.0/include/GL/glew.h \
+		../glew-1.10.0/include/GL/wglew.h \
+		../glew-1.10.0/include/GL/glxew.h
+	$(CC) -c $(CFLAGS) $(INCPATH) -o glew.o ../glew-1.10.0/src/glew.c
+
+FluidSolver3D.o: ../FluidSolver3D.cpp ../FluidSolver3D.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o FluidSolver3D.o ../FluidSolver3D.cpp
+
+particles.o: src/particles.cpp src/particles.h \
 		glm/glm.hpp \
 		glm/detail/_fixes.hpp \
 		glm/fwd.hpp \
@@ -1014,38 +1045,7 @@ terrain.o: src/terrain.cpp src/terrain.h \
 		src/gl/datatype/VBO.h \
 		src/gl/datatype/VBOAttribMarker.h \
 		src/gl/shaders/ShaderAttribLocations.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o terrain.o src/terrain.cpp
-
-VBO.o: src/gl/datatype/VBO.cpp src/gl/datatype/VBO.h \
-		../glew-1.10.0/include/GL/glew.h \
-		src/gl/datatype/VBOAttribMarker.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VBO.o src/gl/datatype/VBO.cpp
-
-VBOAttribMarker.o: src/gl/datatype/VBOAttribMarker.cpp src/gl/datatype/VBOAttribMarker.h \
-		../glew-1.10.0/include/GL/glew.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VBOAttribMarker.o src/gl/datatype/VBOAttribMarker.cpp
-
-VAO.o: src/gl/datatype/VAO.cpp src/gl/datatype/VAO.h \
-		../glew-1.10.0/include/GL/glew.h \
-		src/gl/datatype/VBO.h \
-		src/gl/datatype/IBO.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o VAO.o src/gl/datatype/VAO.cpp
-
-IBO.o: src/gl/datatype/IBO.cpp src/gl/datatype/IBO.h \
-		../glew-1.10.0/include/GL/glew.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o IBO.o src/gl/datatype/IBO.cpp
-
-GLDebug.o: src/gl/GLDebug.cpp src/gl/GLDebug.h \
-		../glew-1.10.0/include/GL/glew.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLDebug.o src/gl/GLDebug.cpp
-
-glew.o: ../glew-1.10.0/src/glew.c ../glew-1.10.0/include/GL/glew.h \
-		../glew-1.10.0/include/GL/wglew.h \
-		../glew-1.10.0/include/GL/glxew.h
-	$(CC) -c $(CFLAGS) $(INCPATH) -o glew.o ../glew-1.10.0/src/glew.c
-
-FluidSolver3D.o: ../FluidSolver3D.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o FluidSolver3D.o ../FluidSolver3D.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o particles.o src/particles.cpp
 
 qrc_shaders.o: qrc_shaders.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_shaders.o qrc_shaders.cpp

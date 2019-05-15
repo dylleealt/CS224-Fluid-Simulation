@@ -26,7 +26,7 @@ void GLWidget::initializeGL() {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     m_program = ResourceLoader::createShaderProgram(":/shaders/shader.vert", ":/shaders/shader.frag");
-    m_terrain.init();
+    m_particles.init();
 
     rebuildMatrices();
 }
@@ -43,7 +43,7 @@ void GLWidget::paintGL() {
     glUniformMatrix4fv(glGetUniformLocation(m_program, "projection"), 1, GL_FALSE, glm::value_ptr(m_projection));
 
     // Draw terrain.
-    m_terrain.draw();
+    m_particles.draw();
 
     // Unbind shader program.
     glUseProgram(0);

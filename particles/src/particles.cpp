@@ -1,9 +1,9 @@
-#include "terrain.h"
+#include "particles.h"
 
 #include <math.h>
 #include "gl/shaders/ShaderAttribLocations.h"
 
-Terrain::Terrain() : m_numRows(100), m_numCols(m_numRows)
+Particles::Particles() : m_numRows(100), m_numCols(m_numRows)
 {
 }
 
@@ -11,15 +11,15 @@ Terrain::Terrain() : m_numRows(100), m_numCols(m_numRows)
 /**
  * Returns a pseudo-random value between -1.0 and 1.0 for the given row and column.
  */
-float Terrain::randValue(int row, int col) {
+float Particles::randValue(int row, int col) {
     return -1.0 + 2.0 * glm::fract(sin(row * 127.1f + col * 311.7f) * 43758.5453123f);
 }
 
 
 /**
- * Returns the object-space position for the terrain vertex at the given row and column.
+ * Returns the object-space position for the Particles vertex at the given row and column.
  */
-glm::vec3 Terrain::getPosition(int row, int col) {
+glm::vec3 Particles::getPosition(int row, int col) {
     glm::vec3 position;
 
     position.x = 10 * row/m_numRows - 5;
@@ -32,7 +32,7 @@ glm::vec3 Terrain::getPosition(int row, int col) {
     return position;
 }
 
-float Terrain::getHeight(int row, int col, int frequency) {
+float Particles::getHeight(int row, int col, int frequency) {
     float A = randValue(row / frequency, col / frequency);
     float B = randValue(row / frequency, col / frequency + 1);
     float C = randValue(row / frequency + 1, col / frequency);
@@ -49,9 +49,9 @@ float Terrain::getHeight(int row, int col, int frequency) {
 
 
 /**
- * Returns the normal vector for the terrain vertex at the given row and column.
+ * Returns the normal vector for the Particles vertex at the given row and column.
  */
-glm::vec3 Terrain::getNormal(int row, int col) {
+glm::vec3 Particles::getNormal(int row, int col) {
     // TODO: Compute the normal at the given row and column using the positions of the
     //       neighboring vertices.
     glm::vec3 p = glm::vec3(getPosition(row, col));
@@ -80,9 +80,9 @@ glm::vec3 Terrain::getNormal(int row, int col) {
 
 
 /**
- * Initializes the terrain by storing positions and normals in a vertex buffer.
+ * Initializes the Particles by storing positions and normals in a vertex buffer.
  */
-void Terrain::init() {
+void Particles::init() {
     // TODO: Change from GL_LINE to GL_FILL in order to render full triangles instead of wireframe.
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -114,9 +114,9 @@ void Terrain::init() {
 
 
 /**
- * Draws the terrain.
+ * Draws the Particles.
  */
-void Terrain::draw()
+void Particles::draw()
 {
     m_shape->draw();
 }

@@ -1,5 +1,5 @@
-#ifndef TERRAIN_H
-#define TERRAIN_H
+#ifndef PARTICLES_H
+#define PARTICLES_H
 
 #define GLM_FORCE_RADIANS
 #include "glm/glm.hpp"            // glm::vec*, mat*, and basic glm functions
@@ -8,10 +8,11 @@
 #include <vector>
 
 #include "openglshape.h"
+#include "../FluidSolver3D.h"
 
-class Terrain {
+class Particles {
 public:
-    Terrain();
+    Particles();
 
     void init();
     void draw();
@@ -25,4 +26,4 @@ private:
     float getHeight(int row, int col, int frequency);
 };
 
-#endif // TERRAIN_H
+#endif // PARTICLES_H
