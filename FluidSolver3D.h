@@ -28,8 +28,7 @@ class FluidSolver
         float *getPressure(){ return m_p; }
         float *getDensity(){ return m_d; }
 
-        void vStep();
-        void sStep();
+        void update(float visc, float diff, float rate, float dt, int flag);
 
         inline int idx(int i, int j, int k){ return i + m_numCols * (j + m_numRows * k); }
         float interpolate(float *u, float x, float y, float z);

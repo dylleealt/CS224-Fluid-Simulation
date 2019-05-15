@@ -19,11 +19,12 @@ public:
 
 private:
     float randValue(int row, int col);
-    glm::vec3 getPosition(int row, int col);
-    glm::vec3 getNormal(int row, int col);
+    const float m_numRows, m_numCols, m_numLayers;
+
     std::unique_ptr<OpenGLShape> m_shape;
-    const float m_numRows, m_numCols;
-    float getHeight(int row, int col, int frequency);
+    std::unique_ptr<FluidSolver> m_solver;
+
+    std::vector<glm::vec3> m_particles;
 };
 
 #endif // PARTICLES_H

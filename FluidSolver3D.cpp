@@ -96,12 +96,29 @@ void FluidSolver::reset()
     */
 }
 
-void FluidSolver::vStep()
+void FluidSolver::update(float visc, float diff, float rate, float dt, int flag)
 {
-}
+    // update velocity
+    addForce(m_vz, nullptr, dt, flag);
 
-void FluidSolver::sStep()
-{
+    diffuse(m_vx0, m_vx, visc, dt, 1);
+    diffuse(m_vy0, m_vy, visc, dt, 2);
+    diffuse(m_vz0, m_vz, visc, dt, 3);
+
+    project(m_v0, m_p, m_div);
+
+    advect(m_vx, m_vx0, m_v0, dt, 1);
+    advect(m_vy, m_vy0, m_v0, dt, 2);
+    advect(m_vz, m_vz0, m_v0, dt, 3);
+
+    project(m_v, m_p, m_div);
+
+    // update density
+    addSource(m_d, m_d0, dt);
+    diffuse(m_d0, m_d, diff, dt, 0);
+    advect(m_d, m_d0, m_v, dt, 0);
+
+    // currently not implementing dissipation
 }
 
 float FluidSolver::interpolate(float *u, float x, float y, float z)
@@ -166,11 +183,12 @@ void FluidSolver::setBoundary(float *u, int b)
 
 void FluidSolver::addForce(float *u, float *f, float dt, int flag)
 {
+    float G = -2.f;
     switch (flag){
       	case 1: // only gravity
       	    for (int i = 0; i < m_numCells; ++i){
       		      // may need to adjust gravitational accel later due to units
-      	        u[i] += -9.8f * dt;
+                u[i] += G * dt;
       	    }
       	    break;
       	case 2: // only external force
@@ -183,6 +201,20 @@ void FluidSolver::addForce(float *u, float *f, float dt, int flag)
                 u[i] += (f[i] - 9.8f) * dt;
       	    }
       	    break;
+        case 4: // swirl
+            for (int i = 1; i < m_nx; ++i){
+                for (int j = 1; j < m_ny; ++j){
+                    for (int k = 1; k < m_nz; ++k){
+                        int cx = m_nx / 2, cy = m_ny / 2;
+                        float relx = i - cx, rely = j - cy;
+                        float radius = relx * rely; // not really, we'll fix this later
+                        // add an orthogonal vector to get swirl
+                        m_vx[idx(i, j, k)] += -rely * dt / radius;
+                        m_vy[idx(i, j, k)] += -relx * dt / radius;
+                        m_vz[idx(i, j, k)] += G * dt;
+                    }
+                }
+            }
 //       	default: // do nothing
     }
 }
