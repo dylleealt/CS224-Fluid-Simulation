@@ -101,11 +101,11 @@ void FluidSolver::update(float visc, float diff, float rate, float dt, int flag)
     // update velocity
     addForce(m_vz, nullptr, dt, flag);
 
-    diffuse(m_vx0, m_vx, visc, dt, 1);
-    diffuse(m_vy0, m_vy, visc, dt, 2);
-    diffuse(m_vz0, m_vz, visc, dt, 3);
+//    diffuse(m_vx0, m_vx, visc, dt, 1);
+//    diffuse(m_vy0, m_vy, visc, dt, 2);
+//    diffuse(m_vz0, m_vz, visc, dt, 3);
 
-    project(m_v0, m_p, m_div);
+//    project(m_v0, m_p, m_div);
 
     advect(m_vx, m_vx0, m_v0, dt, 1);
     advect(m_vy, m_vy0, m_v0, dt, 2);
@@ -113,10 +113,10 @@ void FluidSolver::update(float visc, float diff, float rate, float dt, int flag)
 
     project(m_v, m_p, m_div);
 
-    // update density
-    addSource(m_d, m_d0, dt);
-    diffuse(m_d0, m_d, diff, dt, 0);
-    advect(m_d, m_d0, m_v, dt, 0);
+//    // update density
+//    addSource(m_d, m_d0, dt);
+//    diffuse(m_d0, m_d, diff, dt, 0);
+//    advect(m_d, m_d0, m_v, dt, 0);
 
     // currently not implementing dissipation
 }

@@ -8,7 +8,7 @@ const glm::vec3 triX = glm::vec3(0.5, 0, 0);
 const glm::vec3 triY = glm::vec3(0, 0.5, 0);
 const glm::vec3 triZ = glm::vec3(0, 0, 0.5);
 
-Particles::Particles() : m_numRows(100), m_numCols(m_numRows), m_numLayers(m_numRows)
+Particles::Particles() : m_numRows(50), m_numCols(m_numRows), m_numLayers(m_numRows)
 {
 }
 
@@ -54,37 +54,37 @@ void Particles::init() {
  */
 void Particles::draw()
 {
-    float visc = m_solver->getViscosity();
-    float diff = m_solver->getDiffusionRate();
-    float rate = m_solver->getDissipationRate();
-    float dt = m_solver->getTimeStep();
-    float hx = m_solver->getHx();
-    float hy = m_solver->getHy();
-    float hz = m_solver->getHz();
-    float **velocity = m_solver->getVelocity();
-    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
-    for (int iterations = 0; iterations < 1000; ++iterations){
-        // update velocity grid
-        int flag = iterations < 700 ? 4 : 1;
-        m_solver->update(visc, diff, rate, dt, flag);
-        // update positions
-        for (int i = 0; i < m_numCols; ++i){
-            for (int j = 0; j < m_numRows; ++j){
-                for (int k = 0; k < m_numLayers; ++k){
-                    int index = m_solver->idx(i, j, k);
-                    float x = (i + 0.5) * hx;
-                    float y = (j + 0.5) * hy;
-                    float z = (k + 0.5) * hz;
-                    glm::vec3 v = glm::vec3(
-                                    m_solver->interpolate(vx, x, y, z),
-                                    m_solver->interpolate(vy, x, y, z),
-                                    m_solver->interpolate(vz, x, y, z)
-                                );
-                    m_particles[index] += v * dt;
-                    glm::clamp(m_particles[index], glm::vec3(0), glm::vec3(m_numRows));
-                }
-            }
-        }
-    }
+//    float visc = m_solver->getViscosity();
+//    float diff = m_solver->getDiffusionRate();
+//    float rate = m_solver->getDissipationRate();
+//    float dt = m_solver->getTimeStep();
+//    float hx = m_solver->getHx();
+//    float hy = m_solver->getHy();
+//    float hz = m_solver->getHz();
+//    float **velocity = m_solver->getVelocity();
+//    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
+//    for (int iterations = 0; iterations < 100; ++iterations){
+//        // update velocity grid
+//        int flag = iterations < 70 ? 4 : 1;
+//        m_solver->update(visc, diff, rate, dt, flag);
+//        // update positions
+//        for (int i = 0; i < m_numCols; ++i){
+//            for (int j = 0; j < m_numRows; ++j){
+//                for (int k = 0; k < m_numLayers; ++k){
+//                    int index = m_solver->idx(i, j, k);
+//                    float x = (i + 0.5) * hx;
+//                    float y = (j + 0.5) * hy;
+//                    float z = (k + 0.5) * hz;
+//                    glm::vec3 v = glm::vec3(
+//                                    m_solver->interpolate(vx, x, y, z),
+//                                    m_solver->interpolate(vy, x, y, z),
+//                                    m_solver->interpolate(vz, x, y, z)
+//                                );
+//                    m_particles[index] += v * dt;
+//                    glm::clamp(m_particles[index], glm::vec3(0), glm::vec3(m_numRows));
+//                }
+//            }
+//        }
+//    }
     m_shape->draw();
 }
