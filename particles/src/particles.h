@@ -16,6 +16,7 @@ public:
 
     void init();
     void draw();
+    void test();
 
 private:
     float randValue(int row, int col);

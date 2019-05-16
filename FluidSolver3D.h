@@ -70,14 +70,16 @@ class FluidSolver
         float *m_cy;
         float *m_cz;
 
-        float *m_v[3];  // current velocity
-        float *m_v0[3]; // old velocity
+        float *m_v[3];     // current velocity
+        float *m_v0[3];    // old velocity
 
         // scalar fields
         float *m_p;        // pressure
         float *m_div;
         float *m_d;        // density
         float *m_d0;
+
+        float *m_buf;        // used in the linear solver
 
         void setBoundary(float *u, int b);
         void addForce(float *u, float *f, float dt, int flag);
