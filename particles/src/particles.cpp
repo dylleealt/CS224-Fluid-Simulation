@@ -18,19 +18,6 @@ Particles::Particles() : m_numRows(50), m_numCols(m_numRows), m_numLayers(m_numR
 void Particles::init() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    // Initialize solver
-    m_solver = std::make_unique<FluidSolver>(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
-    m_solver->reset();
-    float visc = m_solver->getViscosity();
-    float diff = m_solver->getDiffusionRate();
-    float rate = m_solver->getDissipationRate();
-    float vorticity = m_solver->getVorticity();
-    float dt = m_solver->getTimeStep();
-    for (int i = 0; i < 1000; ++i){
-        std::cout<<i<<std::endl;
-        m_solver->update(visc, diff, rate, vorticity, dt, 3);
-    }
-
     // Initializes a grid of particles, will convert to triangle strip later maybe
     int numParticles = m_numCols * m_numRows * m_numLayers;
     m_particles.reserve(3 * numParticles);
@@ -49,6 +36,41 @@ void Particles::init() {
         }
     }
 
+    // Initialize solver
+    m_solver = std::make_unique<FluidSolver>(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
+    m_solver->reset();
+    float visc = m_solver->getViscosity();
+    float diff = m_solver->getDiffusionRate();
+    float rate = m_solver->getDissipationRate();
+    float vorticity = m_solver->getVorticity();
+    float dt = m_solver->getTimeStep();
+    float hx = m_solver->getHx();
+    float hy = m_solver->getHy();
+    float hz = m_solver->getHz();
+    float **velocity = m_solver->getVelocity();
+    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
+    for (int i = 0; i < 1000; ++i){
+        int flag = (i < 700) ? 4 : 1;
+        m_solver->update(visc, diff, rate, vorticity, dt, flag);
+        // update positions
+        for (int i = 0; i < m_numCols; ++i){
+            for (int j = 0; j < m_numRows; ++j){
+                for (int k = 0; k < m_numLayers; ++k){
+                    int index = m_solver->idx(i, j, k);
+                    float x = (i + 0.5) * hx;
+                    float y = (j + 0.5) * hy;
+                    float z = (k + 0.5) * hz;
+                    glm::vec3 v = glm::vec3(
+                                    m_solver->interpolate(vx, x, y, z),
+                                    m_solver->interpolate(vy, x, y, z),
+                                    m_solver->interpolate(vz, x, y, z)
+                                );
+                    m_particles[index] += v * dt;
+                    glm::clamp(m_particles[index], glm::vec3(0), glm::vec3(m_numRows));
+                }
+            }
+        }
+    }
 
     // Initialize OpenGLShape.
     m_shape = std::make_unique<OpenGLShape>();
@@ -63,33 +85,5 @@ void Particles::init() {
  */
 void Particles::draw()
 {
-//    float visc = m_solver->getViscosity();
-//    float diff = m_solver->getDiffusionRate();
-//    float rate = m_solver->getDissipationRate();
-//    float dt = m_solver->getTimeStep();
-//    float hx = m_solver->getHx();
-//    float hy = m_solver->getHy();
-//    float hz = m_solver->getHz();
-//    float **velocity = m_solver->getVelocity();
-//    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
-//    m_solver->update(visc, diff, rate, dt, 4);
-//    // update positions
-//    for (int i = 0; i < m_numCols; ++i){
-//        for (int j = 0; j < m_numRows; ++j){
-//            for (int k = 0; k < m_numLayers; ++k){
-//                int index = m_solver->idx(i, j, k);
-//                float x = (i + 0.5) * hx;
-//                float y = (j + 0.5) * hy;
-//                float z = (k + 0.5) * hz;
-//                glm::vec3 v = glm::vec3(
-//                                m_solver->interpolate(vx, x, y, z),
-//                                m_solver->interpolate(vy, x, y, z),
-//                                m_solver->interpolate(vz, x, y, z)
-//                            );
-//                m_particles[index] += v * dt;
-//                glm::clamp(m_particles[index], glm::vec3(0), glm::vec3(m_numRows));
-//            }
-//        }
-//    }
     m_shape->draw();
 }

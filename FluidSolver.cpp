@@ -105,9 +105,9 @@ void FluidSolver::reset()
 void FluidSolver::update(float visc, float diff, float rate, float vorticity, float dt, int flag)
 {
     // update velocity
-    addForce(m_vx, m_vx0, dt, 2);
-    addForce(m_vy, m_vy0, dt, 2);
-    addForce(m_vz, m_vz0, dt, 4);
+    addForce(m_vx, m_vx0, dt, flag);
+    addForce(m_vy, m_vy0, dt, flag);
+    addForce(m_vz, m_vz0, dt, flag);
 
 //    for (int i = 0; i < m_numCells; ++i){
 //        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
@@ -223,8 +223,8 @@ void FluidSolver::addForce(float *u, float *f, float dt, int flag)
     switch (flag){
         case 1: // only gravity
             for (int i = 0; i < m_numCells; ++i){
-                  // may need to adjust gravitational accel later due to units
-                u[i] += G * dt;
+                // may need to adjust gravitational accel later due to units
+                m_vz[i] += G * dt;
             }
             break;
         case 2: // only external force
