@@ -1,15 +1,8 @@
-#include "Solver3D.h"
+#include "Renderer.h"
 
 int main(){
-    Solver3D *solver = new Solver3D();
-    solver->init();
-    solver->reset();
-
-    // while (1){
-    for (int i = 0; i < 100; ++i){
-       solver->vStep();
-       solver->sStep();
-    }
+    Renderer renderer = Renderer(1.0, 60, 100, 100.0, 25.0, 0.0005, 0.2, 0.0, 400);
+    renderer.simulateAndRender(100,100);
 
     return 0;
 }
