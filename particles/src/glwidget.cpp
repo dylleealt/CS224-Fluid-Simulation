@@ -71,7 +71,7 @@ void GLWidget::wheelEvent(QWheelEvent *event) {
 
 void GLWidget::rebuildMatrices() {
     m_model = glm::mat4(1.f);
-    m_view = glm::translate(glm::vec3(0, 0, -m_zoom)) *
+    m_view = glm::translate(glm::vec3(0, 0, -2 * m_zoom)) *
              glm::rotate(m_angleY, glm::vec3(1,0,0)) *
              glm::rotate(m_angleX, glm::vec3(0,1,0));
     m_projection = glm::perspective(0.8f, (float)width()/height(), 0.1f, 100.f);

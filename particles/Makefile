@@ -502,6 +502,7 @@ moc_mainwindow.cpp: src/glwidget.h \
 		src/openglshape.h \
 		src/gl/datatype/VBO.h \
 		src/gl/datatype/VBOAttribMarker.h \
+		../FluidSolver.h \
 		src/mainwindow.h \
 		/usr/lib/x86_64-linux-gnu/qt5/bin/moc
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/gpfs/main/home/dtian2/course/cs2240/final/particles -I/gpfs/main/home/dtian2/course/cs2240/final/particles/src -I/gpfs/main/home/dtian2/course/cs2240/final/particles/cs123_lib -I/gpfs/main/home/dtian2/course/cs2240/final/particles/glm -I/gpfs/main/home/dtian2/course/cs2240/final/glew-1.10.0/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtOpenGL -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/6 -I/usr/include/x86_64-linux-gnu/c++/6 -I/usr/include/c++/6/backward -I/usr/lib/gcc/x86_64-linux-gnu/6/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include src/mainwindow.h -o moc_mainwindow.cpp
@@ -597,6 +598,7 @@ moc_glwidget.cpp: ../glew-1.10.0/include/GL/glew.h \
 		src/openglshape.h \
 		src/gl/datatype/VBO.h \
 		src/gl/datatype/VBOAttribMarker.h \
+		../FluidSolver.h \
 		src/glwidget.h \
 		/usr/lib/x86_64-linux-gnu/qt5/bin/moc
 	/usr/lib/x86_64-linux-gnu/qt5/bin/moc $(DEFINES) -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++-64 -I/gpfs/main/home/dtian2/course/cs2240/final/particles -I/gpfs/main/home/dtian2/course/cs2240/final/particles/src -I/gpfs/main/home/dtian2/course/cs2240/final/particles/cs123_lib -I/gpfs/main/home/dtian2/course/cs2240/final/particles/glm -I/gpfs/main/home/dtian2/course/cs2240/final/glew-1.10.0/include -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtOpenGL -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/6 -I/usr/include/x86_64-linux-gnu/c++/6 -I/usr/include/c++/6/backward -I/usr/lib/gcc/x86_64-linux-gnu/6/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include src/glwidget.h -o moc_glwidget.cpp
@@ -713,6 +715,7 @@ mainwindow.o: src/mainwindow.cpp src/mainwindow.h \
 		src/openglshape.h \
 		src/gl/datatype/VBO.h \
 		src/gl/datatype/VBOAttribMarker.h \
+		../FluidSolver.h \
 		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o src/mainwindow.cpp
 
@@ -808,7 +811,8 @@ main.o: src/main.cpp src/mainwindow.h \
 		glm/gtc/type_ptr.inl \
 		src/openglshape.h \
 		src/gl/datatype/VBO.h \
-		src/gl/datatype/VBOAttribMarker.h
+		src/gl/datatype/VBOAttribMarker.h \
+		../FluidSolver.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o src/main.cpp
 
 glwidget.o: src/glwidget.cpp src/glwidget.h \
@@ -903,6 +907,7 @@ glwidget.o: src/glwidget.cpp src/glwidget.h \
 		src/openglshape.h \
 		src/gl/datatype/VBO.h \
 		src/gl/datatype/VBOAttribMarker.h \
+		../FluidSolver.h \
 		cs123_lib/resourceloader.h \
 		cs123_lib/errorchecker.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o glwidget.o src/glwidget.cpp
@@ -950,7 +955,7 @@ glew.o: ../glew-1.10.0/src/glew.c ../glew-1.10.0/include/GL/glew.h \
 		../glew-1.10.0/include/GL/glxew.h
 	$(CC) -c $(CFLAGS) $(INCPATH) -o glew.o ../glew-1.10.0/src/glew.c
 
-FluidSolver.o: ../FluidSolver.cpp 
+FluidSolver.o: ../FluidSolver.cpp ../FluidSolver.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o FluidSolver.o ../FluidSolver.cpp
 
 particles.o: src/particles.cpp src/particles.h \
@@ -1044,6 +1049,7 @@ particles.o: src/particles.cpp src/particles.h \
 		../glew-1.10.0/include/GL/glew.h \
 		src/gl/datatype/VBO.h \
 		src/gl/datatype/VBOAttribMarker.h \
+		../FluidSolver.h \
 		src/gl/shaders/ShaderAttribLocations.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o particles.o src/particles.cpp
 
