@@ -1,9 +1,13 @@
 TEMPLATE = app
-CONFIG += console c++11
+
+QMAKE_CXXFLAGS += -std=c++14
+CONFIG += c++14
+#CONFIG += console c++11
 CONFIG -= app_bundle
 #CONFIG -= qt
 
-SOURCES += main.cpp \
+SOURCES += \
+    main.cpp \
     Renderer.cpp \
     FluidSolver.cpp \
     LevelSetSolver.cpp
