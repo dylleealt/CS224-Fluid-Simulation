@@ -1,6 +1,8 @@
 #include "Renderer.h"
 
 #include <iostream>
+#include <thread>
+#include <future>
 
 Renderer::Renderer(float timestep, int numFrames, int numCells, float size, float radius, float visc, float diff, float rate, float vorticity, int numParticles):
     m_numCells(numCells),
@@ -82,6 +84,7 @@ void Renderer::simulateAndRender(int width, int height) {
     //each iteration of for loop is one step forward in time: define what the timestep is and use this when playing back rendered frames
     for (int i = 0; i < 1; ++i){
 //    for (int i = 0; i < m_numFrames; ++i){
+        std::cout<<"Frame: "<<i<<std::endl;
         if (i < 100) {
             m_fSolver->update(m_fSolver->getViscosity(), m_fSolver->getDiffusionRate(), m_fSolver->getDissipationRate(), m_fSolver->getVorticity(), m_timestep, 4);
         } else {
@@ -101,7 +104,13 @@ void Renderer::simulateAndRender(int width, int height) {
        glm::vec3 camFwrd = lookVector * -1.f;
        glm::vec3 camRght = glm::normalize(glm::cross(camFwrd, up));
        glm::vec3 camUp = glm::normalize(glm::cross(camRght, camFwrd));
-       for(int y = 0; y < height; ++y) {
+       std::cout<<"Rendering..."<<std::endl;
+       // MULTITHREADING
+       int num_threads = std::thread::hardware_concurrency();
+       // set up future vector
+       std::vector<std::future<void>> results;
+       for (int i = 0; i < num_threads; i++){ results.emplace_back(std::async([=](){
+       for(int y = i; y < height; y+=num_threads) {
            for(int x = 0; x < width; ++x) {
                int offset = x + (y * width);
                glm::vec3 rayDir((2.f * x / width) - 1, 1 - (2.f * y / height), focalLength); // this is in camera coords, not world coords. Can I use the projectOnto function from before to shift the coordinates???
@@ -114,7 +123,7 @@ void Renderer::simulateAndRender(int width, int height) {
                int iDist = (int) dist;
                imageData[offset] = qRgb(iDist, iDist, iDist);
            }
-       }
+       } })); }
        QString output = QString("../img").append(QString::number(i)).append(QString(".png"));
        bool success = image.save(output);
        if(!success) {
