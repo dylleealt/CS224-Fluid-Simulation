@@ -105,9 +105,9 @@ void FluidSolver::reset()
 void FluidSolver::update(float visc, float diff, float rate, float vorticity, float dt, int flag)
 {
     // update velocity
-    addForce(m_vx, m_vx0, dt, 2);
-    addForce(m_vy, m_vy0, dt, 2);
-    addForce(m_vz, m_vz0, dt, 4);
+    addForce(m_vx, m_vx0, dt, flag);
+    addForce(m_vy, m_vy0, dt, flag);
+    addForce(m_vz, m_vz0, dt, flag);
 
 //    for (int i = 0; i < m_numCells; ++i){
 //        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
@@ -158,6 +158,10 @@ void FluidSolver::update(float visc, float diff, float rate, float vorticity, fl
 
 float FluidSolver::interpolate(float *u, float x, float y, float z)
 {
+    // clamp to boundaries
+    x = std::min(std::max(x, m_minX), m_maxX);
+    y = std::min(std::max(y, m_minY), m_maxY);
+    z = std::min(std::max(z, m_minZ), m_maxZ);
     // get back to grid coordinates
     float i = x / m_hx;
     float j = y / m_hy;
@@ -219,12 +223,13 @@ void FluidSolver::setBoundary(float *u, int b)
 
 void FluidSolver::addForce(float *u, float *f, float dt, int flag)
 {
-    float G = -9.8;
+    float G = -9.8f;
+    float F = 10.f;
     switch (flag){
         case 1: // only gravity
             for (int i = 0; i < m_numCells; ++i){
-                  // may need to adjust gravitational accel later due to units
-                u[i] += G * dt;
+                // may need to adjust gravitational accel later due to units
+                m_vz[i] += G * dt;
             }
             break;
         case 2: // only external force
@@ -245,8 +250,8 @@ void FluidSolver::addForce(float *u, float *f, float dt, int flag)
                         float relx = i - cx, rely = j - cy;
                         float radius = std::max(1.f, relx + rely); // not really, we'll fix this later
                         // add an orthogonal vector to get swirl
-                        m_vx[idx(i, j, k)] += -rely * dt / radius;
-                        m_vy[idx(i, j, k)] += -relx * dt / radius;
+                        m_vx[idx(i, j, k)] += F * -rely * dt / radius;
+                        m_vy[idx(i, j, k)] += F * -relx * dt / radius;
                         m_vz[idx(i, j, k)] += G * dt;
                     }
                 }
@@ -280,10 +285,6 @@ void FluidSolver::advect(float *u, float *u0, float **v, float dt, int b)
                 prevX = x - v[0][curIdx] * dt;
                 prevY = y - v[1][curIdx] * dt;
                 prevZ = z - v[2][curIdx] * dt;
-                // clamp to boundaries
-                prevX = std::min(std::max(prevX, m_minX), m_maxX);
-                prevY = std::min(std::max(prevY, m_minY), m_maxY);
-                prevZ = std::min(std::max(prevZ, m_minZ), m_maxZ);
                 // update field
                 u[curIdx] = interpolate(u0, prevX, prevY, prevZ);
             }
