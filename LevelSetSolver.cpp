@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <string.h>
+#include <iostream>
 
 #define SWAP(u, u0) {auto tmp=u; u=u0; u0=tmp;}
 #define MIX(a, x, y) ((1 - a) * (x) + (a) * y)
@@ -98,6 +99,9 @@ float LevelSetSolver::phi_axis(int x, int y, int z, float delta, char axis, floa
         float v3;
         float v4;
         float v5;
+//        if (delta == 0.0) {
+//            delta = 1.0;
+//        }
 		if (vel > 0) {
             v1 = (phi_offset(m_phi0, x, y, z, -2, axis) - phi_offset(m_phi0, x, y, z, -3, axis)) / delta;
             v2 = (phi_offset(m_phi0, x, y, z, -1, axis) - phi_offset(m_phi0, x, y, z, -2, axis)) / delta;
@@ -138,24 +142,32 @@ glm::vec3 LevelSetSolver::phi0_gradient(int x, int y, int z) {
     float grad_x = (m_phi0[idx(x + 1, y, z)] - m_phi0[idx(x - 1, y, z)]) * 0.5;
     float grad_y = (m_phi0[idx(x, y + 1, z)] - m_phi0[idx(x, y - 1, z)]) * 0.5;
     float grad_z = (m_phi0[idx(x, y, z + 1)] - m_phi0[idx(x, y, z - 1)]) * 0.5;
-	return glm::normalize(glm::vec3(grad_x, grad_y, grad_z));
+//    std::cerr<<"grad_x: "<<grad_x<<"; grad_y: "<<grad_y<<"; grad_z: "<<grad_z<<"\n";
+    if (grad_x + grad_y + grad_z != 0.0) {
+        return glm::normalize(glm::vec3(grad_x, grad_y, grad_z));
+    }
+    return glm::vec3(grad_x, grad_y, grad_z);
 }
 
 void LevelSetSolver::update(float **velocity) {
 	//swap phi and phi0 so that after a step forward, phi is the most recent one
 	//TODO: make sure types are super consistent
     float* temp = m_phi0;
-	m_phi0 = m_phi;
+    m_phi0 = m_phi;
 	m_phi = temp;
 	//for each point in the phi-grid, get phi_t
-    for (int x = 1; x < m_nx; x++) {
-        for (int y = 1; y < m_ny; y++) {
-            for (int z = 1; z < m_nz; z++) {
+    for (int x = 3; x < m_nx - 2; x++) {
+        for (int y = 3; y < m_ny - 2; y++) {
+            for (int z = 3; z < m_nz - 2; z++) {
                 float *vel0 = velocity[0];
                 float *vel1 = velocity[1];
                 float *vel2 = velocity[2];
-                m_phi[idx(x,y,z)] = phi_t(x, y, z, phi0_gradient(x,y,z), glm::vec3(vel0[idx(x,y,z)],vel1[idx(x,y,z)],vel2[idx(x,y,z)])); //TODO: get velocity
+//                std::cerr<<phi0_gradient(x,y,z).z<<" ";
+//                std::cerr<<vel0[idx(x,y,z)]<<" "<<vel1[idx(x,y,z)]<<vel2[idx(x,y,z)]<<"\n";
+                m_phi[idx(x,y,z)] = phi_t(x, y, z, phi0_gradient(x,y,z), glm::vec3(vel0[idx(x,y,z)],vel1[idx(x,y,z)],vel2[idx(x,y,z)]));
+//                std::cerr<<m_phi[idx(x,y,z)]<<" ";
 			}
+            std::cerr<<"\n";
 		}
 	}
 	

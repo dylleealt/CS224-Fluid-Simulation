@@ -20,6 +20,9 @@ class LevelSetSolver
         float getWidth() { return m_width; }
         float getHeight() { return m_height; }
         float getDepth() { return m_depth; }
+        float getNx() { return m_nx; }
+        float getNy() { return m_ny; }
+        float getNz() { return m_nz; }
         float getHx() { return m_hx; }
         float getHy() { return m_hy; }
         float getHz() { return m_hz; }
