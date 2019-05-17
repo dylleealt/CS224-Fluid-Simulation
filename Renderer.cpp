@@ -3,6 +3,7 @@
 #include <iostream>
 
 Renderer::Renderer(float timestep, int numFrames, int numCells, float size, float radius, float visc, float diff, float rate, float vorticity, int numParticles):
+    m_numCells(numCells),
     m_timestep(timestep),
     m_numFrames(numFrames)
 {
@@ -34,41 +35,50 @@ Renderer::~Renderer()
 {
 }
 
-float Renderer::rayMarch(glm::vec3 rayOrigin, glm::vec3 rayDir) {
-    float distance_to_origin = 0.0;
-    int max_steps = 200;
-    float max_dist = 1000;
-    float surface_dist = 0.005;
-    for (int i = 0; i < max_steps; i++) {
-//        std::cerr<<"test1\n";
-        glm::vec3 p = rayOrigin + (distance_to_origin * rayDir);
-        std::cerr<<"position along ray: "<<p.x<<" "<<p.y<<" "<<p.z<<"\n";
-        if(p.x >= m_lsSolver->getNx() || p.x <= 1 || p.y >= m_lsSolver->getNy() || p.z <= 1 || p.x >= m_lsSolver->getNz() || p.z <= 1) { //raymarch to cube then use distance field inside
-             std::cerr<<"test2\n";
-            return 0.0;
-            break;
-        }
-//        std::cerr<<"test3: "<<p.x<<", "<<p.y<<", "<<p.z<<"\n";
-        float distance_to_surface = m_lsSolver->interpolate(m_lsSolver->m_phi, p.x, p.y, p.z);
-        distance_to_origin += distance_to_surface;
-        if(distance_to_surface < surface_dist || distance_to_origin > max_dist) {
+float Renderer::sdBox(glm::vec3 p, glm::vec3 b)
+{
+    glm::vec3 d = glm::abs(p) - b;
+    return glm::min(glm::max(d.x,glm::max(d.y,d.z)),0.f) + glm::length(glm::max(d,0.f));
+}
 
-            if(distance_to_origin > max_dist) {
-                std::cerr<<"test0\n";
-//                distance_to_origin = INFINITY;
-                return 0.0;
-            }
-            return 100000 * distance_to_origin;
+float Renderer::rayMarch(glm::vec3 rayOrigin, glm::vec3 rayDir) {
+    float marchDist = 0.001f;
+    float boundingDist = 200.f;
+    float threshold = 0.001;
+    int maxSteps = 1000;
+
+    for (int i = 0; i < maxSteps; ++i) {
+        glm::vec3 p = rayOrigin + (marchDist * rayDir);
+//        if(p.x >= m_lsSolver->getNx() || p.x <= 1 || p.y >= m_lsSolver->getNy() || p.z <= 1 || p.x >= m_lsSolver->getNz() || p.z <= 1) { //raymarch to cube then use distance field inside
+//             std::cerr<<"test2\n";
+//            return 0.0;
 //            break;
+//        }
+        float dist = sdBox(p - glm::vec3(m_numCells / 2), glm::vec3(m_numCells / 2));
+        if (dist > boundingDist){
+            return -1.f;
         }
+        if (dist < threshold){
+            return marchDist;
+        }
+        if (dist > 0.f){
+            marchDist += dist * 0.7f;
+        }
+//        else {
+//            dist = m_lsSolver->interpolate(m_lsSolver->m_phi, p.x, p.y, p.z);
+//            if (dist < threshold){
+//                return marchDist;
+//            }
+//            if (dist > boundingDist){
+//                return marchDist;
+//            }
+//        }
     }
-    return distance_to_origin;
+
+    return -1.f;
 }
 
 void Renderer::simulateAndRender(int width, int height) {
-//    std::cerr<<"test\n";
-
-//    float** frames;
     //each iteration of for loop is one step forward in time: define what the timestep is and use this when playing back rendered frames
     for (int i = 0; i < 1; ++i){
 //    for (int i = 0; i < m_numFrames; ++i){
@@ -78,25 +88,31 @@ void Renderer::simulateAndRender(int width, int height) {
             m_fSolver->update(m_fSolver->getViscosity(), m_fSolver->getDiffusionRate(), m_fSolver->getDissipationRate(), m_fSolver->getVorticity(), m_timestep, 1);
         }
        m_lsSolver->update(m_fSolver->getVelocity());
+
        QImage image(width, height, QImage::Format_RGB32);
        QRgb *imageData = reinterpret_cast<QRgb *>(image.bits());
-       glm::vec3 cameraPos = glm::vec3(98.0,98.0,98.0);
-       glm::vec3 target = glm::vec3(0.0,0.0,0.0);
+
+       glm::vec3 cameraPos = glm::vec3(-50, 60, -50);
+       glm::vec3 target = glm::vec3(0.0, 30.0, 0.0);
        glm::vec3 lookVector = glm::normalize(cameraPos - target);
        glm::vec3 up = glm::vec3(0.0, 1.0, 0.0);
 
+       float focalLength = 2.0;
        glm::vec3 camFwrd = lookVector * -1.f;
        glm::vec3 camRght = glm::normalize(glm::cross(camFwrd, up));
        glm::vec3 camUp = glm::normalize(glm::cross(camRght, camFwrd));
        for(int y = 0; y < height; ++y) {
            for(int x = 0; x < width; ++x) {
                int offset = x + (y * width);
-               glm::vec3 rayDir((2.f * x / width) - 1, 1 - (2.f * y / height), -1); // this is in camera coords, not world coords. Can I use the projectOnto function from before to shift the coordinates???
+               glm::vec3 rayDir((2.f * x / width) - 1, 1 - (2.f * y / height), focalLength); // this is in camera coords, not world coords. Can I use the projectOnto function from before to shift the coordinates???
                rayDir = glm::normalize(camRght * rayDir.x + camUp * rayDir.y + camFwrd * rayDir.z);
                float dist = rayMarch(cameraPos, rayDir);
                std::cerr<<dist<<"\n";
+               if (dist < 0.f) {
+                   imageData[offset] = qRgb(0.0, 0.0, 0.0);
+               }
                int iDist = (int) dist;
-               imageData[offset] = qRgb(x, y, iDist);
+               imageData[offset] = qRgb(iDist, iDist, iDist);
            }
        }
        QString output = QString("../img").append(QString::number(i)).append(QString(".png"));

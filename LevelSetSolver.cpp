@@ -184,6 +184,10 @@ void LevelSetSolver::reset()
 //takes world space coords
 float LevelSetSolver::interpolate(float *u, float x, float y, float z)
 {
+    // clamp to boundaries
+    x = std::min(std::max(x, m_minX), m_maxX);
+    y = std::min(std::max(y, m_minY), m_maxY);
+    z = std::min(std::max(z, m_minZ), m_maxZ);
     // get back to grid coordinates
     float i = x / m_hx;
     float j = y / m_hy;
@@ -192,6 +196,7 @@ float LevelSetSolver::interpolate(float *u, float x, float y, float z)
     int i0 = floor(i);
     int j0 = floor(j);
     int k0 = floor(k);
+    // std::cout<<i0<<" "<<j0<<" "<<k0<<std::endl;
     // weights
     float r = i - i0;
     float s = j - j0;
