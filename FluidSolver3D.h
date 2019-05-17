@@ -1,13 +1,12 @@
 #ifndef __FLUIDSOLVER_H__
 #define __FLUIDSOLVER_H__
 
-
 class FluidSolver
 {
     public:
         FluidSolver();
         ~FluidSolver();
-        void init();
+        void init(int x, int y, int z, float width, float height, float depth, float visc, float diff, float rate, float dt);
         void reset();
 
         int getNumCols(){ return m_numCols; }
@@ -29,8 +28,7 @@ class FluidSolver
         float *getPressure(){ return m_p; }
         float *getDensity(){ return m_d; }
 
-        void vStep();
-        void sStep();
+        void update(float visc, float diff, float rate, float dt, int flag);
 
         inline int idx(int i, int j, int k){ return i + m_numCols * (j + m_numRows * k); }
         float interpolate(float *u, float x, float y, float z);
@@ -72,14 +70,16 @@ class FluidSolver
         float *m_cy;
         float *m_cz;
 
-        float *m_v[NDIM];  // current velocity
-        float *m_v0[NDIM]; // old velocity
+        float *m_v[3];     // current velocity
+        float *m_v0[3];    // old velocity
 
         // scalar fields
         float *m_p;        // pressure
         float *m_div;
         float *m_d;        // density
         float *m_d0;
+
+        float *m_buf;        // used in the linear solver
 
         void setBoundary(float *u, int b);
         void addForce(float *u, float *f, float dt, int flag);
@@ -89,6 +89,6 @@ class FluidSolver
         void diffuse(float *u, float *u0, float k, float dt, int b);
         void project(float **v, float *p, float *div);
         void dissipate(float *u, float *u0, float rate, float dt);
-}
+};
 
 #endif

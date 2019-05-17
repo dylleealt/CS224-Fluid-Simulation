@@ -1,7 +1,9 @@
-#include "FluidSolver.h"
+#include "FluidSolver3D.h"
 
 #include <cmath>
 #include <algorithm>
+#include <string.h>
+#include <iostream>
 
 #define SWAP(u, u0) {auto tmp=u; u=u0; u0=tmp;}
 #define MIX(a, x, y) ((1 - a) * (x) + (a) * y)
@@ -19,7 +21,6 @@ FluidSolver::~FluidSolver()
     delete m_vy0;
     delete m_vz0;
     delete m_p;
-    delete m_p0;
     delete m_d;
     delete m_d0;
 }
@@ -32,7 +33,7 @@ void FluidSolver::init(int x, int y, int z, float width, float height, float dep
     m_nx = x - 1;
     m_ny = y - 1;
     m_nz = z - 1;
-    m_numCells = m_numCols * m_numRows * numLayers;
+    m_numCells = m_numCols * m_numRows * m_numLayers;
 
     m_width = width;
     m_height = height;
@@ -73,6 +74,7 @@ void FluidSolver::init(int x, int y, int z, float width, float height, float dep
     m_div = new float[m_numCells];
     m_d = new float[m_numCells];
     m_d0 = new float[m_numCells];
+    m_buf = new float[m_numCells];
 }
 
 void FluidSolver::reset()
@@ -84,6 +86,11 @@ void FluidSolver::reset()
     memset(m_p, 0, sizeof(float) * m_numCells);
     memset(m_d, 0, sizeof(float) * m_numCells);
 
+    memset(m_vx0, 0, sizeof(float) * m_numCells);
+    memset(m_vy0, 0, sizeof(float) * m_numCells);
+    memset(m_vz0, 0, sizeof(float) * m_numCells);
+    memset(m_d0, 0, sizeof(float) * m_numCells);
+
     // guaranteed to work but is slower
     /*
     for (int i = 0; i < m_numCells; ++i){
@@ -92,16 +99,59 @@ void FluidSolver::reset()
          m_vz[i] = 0.f;
          m_p[i] = 0.f;
          m_d[i] = 0.f;
+         m_vx0[i] = 0.f;
+         m_vy0[i] = 0.f;
+         m_vz0[i] = 0.f;
+         m_d0[i] = 0.f;
     }
     */
 }
 
-void FluidSolver::vStep()
+void FluidSolver::update(float visc, float diff, float rate, float dt, int flag)
 {
-}
+    // update velocity
+    addForce(m_vx, m_vx0, dt, 2);
+    addForce(m_vy, m_vy0, dt, 2);
+    addForce(m_vz, m_vz0, dt, 4);
 
-void FluidSolver::sStep()
-{
+//    for (int i = 0; i < m_numCells; ++i){
+//        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
+//    }
+
+    diffuse(m_vx0, m_vx, visc, dt, 1);
+    diffuse(m_vy0, m_vy, visc, dt, 2);
+    diffuse(m_vz0, m_vz, visc, dt, 3);
+
+//    for (int i = 0; i < m_numCells; ++i){
+//        std::cout<<"v: "<<m_vx0[i]<<" "<<m_vy0[i]<<" "<<m_vz0[i]<<std::endl;
+//    }
+
+    project(m_v0, m_p, m_div);
+
+//    for (int i = 0; i < m_numCells; ++i){
+//        std::cout<<"v: "<<m_vx0[i]<<" "<<m_vy0[i]<<" "<<m_vz0[i]<<std::endl;
+//    }
+
+    advect(m_vx, m_vx0, m_v0, dt, 1);
+    advect(m_vy, m_vy0, m_v0, dt, 2);
+    advect(m_vz, m_vz0, m_v0, dt, 3);
+
+//    for (int i = 0; i < m_numCells; ++i){
+//        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
+//    }
+
+    project(m_v, m_p, m_div);
+
+//    for (int i = 0; i < m_numCells; ++i){
+//        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
+//    }
+
+    // update density
+    addSource(m_d, m_d0, dt);
+    diffuse(m_d0, m_d, diff, dt, 0);
+    advect(m_d, m_d0, m_v, dt, 0);
+
+    // currently not implementing dissipation
 }
 
 float FluidSolver::interpolate(float *u, float x, float y, float z)
@@ -114,6 +164,7 @@ float FluidSolver::interpolate(float *u, float x, float y, float z)
     int i0 = floor(i);
     int j0 = floor(j);
     int k0 = floor(k);
+    // std::cout<<i0<<" "<<j0<<" "<<k0<<std::endl;
     // weights
     float r = i - i0;
     float s = j - j0;
@@ -121,7 +172,7 @@ float FluidSolver::interpolate(float *u, float x, float y, float z)
     return MIX(r,
             MIX(s,
               MIX(t, u[idx(i0, j0, k0)], u[idx(i0, j0, k0 + 1)]),
-              MIX(t, u[idx(i0, j0 + 1. k0)], u[idx(i0, j0 + 1, k0 + 1)])
+              MIX(t, u[idx(i0, j0 + 1, k0)], u[idx(i0, j0 + 1, k0 + 1)])
             ),
             MIX(s,
               MIX(t, u[idx(i0 + 1, j0, k0)], u[idx(i0 + 1, j0, k0 + 1)]),
@@ -161,16 +212,17 @@ void FluidSolver::setBoundary(float *u, int b)
     u[idx(m_nx, m_ny, 0)] = (u[idx(m_nx - 1, m_ny, 0)] + u[idx(m_nx, m_ny - 1, 0)] + u[idx(m_nx, m_nx, 1)]) / 3.f;
     u[idx(m_nx, 0, m_nz)] = (u[idx(m_nx - 1, 0, m_nz)] + u[idx(m_nx, 1, m_nz)] + u[idx(m_nx, 0, m_nz - 1)]) / 3.f;
     u[idx(0, m_ny, m_nz)] = (u[idx(1, m_ny, m_nz)] + u[idx(0, m_ny - 1, m_nz)] + u[idx(0, m_ny, m_nz - 1)]) / 3.f;
-    u[idx(m_nx, m_ny, m_nz)] = (u[idx(m_nx - 1, m_ny, m_nz)] + u[idx(m_nx, m_ny - 1, m_nz0)] + u[idx(m_nx, m_ny, m_nz - 1)]) / 3.f;
+    u[idx(m_nx, m_ny, m_nz)] = (u[idx(m_nx - 1, m_ny, m_nz)] + u[idx(m_nx, m_ny - 1, m_nz)] + u[idx(m_nx, m_ny, m_nz - 1)]) / 3.f;
 }
 
 void FluidSolver::addForce(float *u, float *f, float dt, int flag)
 {
+    float G = -9.8;
     switch (flag){
       	case 1: // only gravity
       	    for (int i = 0; i < m_numCells; ++i){
       		      // may need to adjust gravitational accel later due to units
-      	        u[i] += -9.8f * dt;
+                u[i] += G * dt;
       	    }
       	    break;
       	case 2: // only external force
@@ -180,10 +232,24 @@ void FluidSolver::addForce(float *u, float *f, float dt, int flag)
       	    break;
       	case 3: // both gravity and external force
       	    for (int i = 0; i < m_numCells; ++i){
-                u[i] += (f[i] - 9.8f) * dt;
+                u[i] += (f[i] + G) * dt;
       	    }
       	    break;
-      	default: // do nothing
+        case 4: // gravity and swirl
+            for (int i = 1; i < m_nx; ++i){
+                for (int j = 1; j < m_ny; ++j){
+                    for (int k = 1; k < m_nz; ++k){
+                        int cx = m_nx / 2, cy = m_ny / 2;
+                        float relx = i - cx, rely = j - cy;
+                        float radius = std::max(1.f, relx * rely); // not really, we'll fix this later
+                        // add an orthogonal vector to get swirl
+                        m_vx[idx(i, j, k)] += -rely * dt / radius;
+                        m_vy[idx(i, j, k)] += -relx * dt / radius;
+                        m_vz[idx(i, j, k)] += G * dt;
+                    }
+                }
+            }
+//       	default: // do nothing
     }
 }
 
@@ -225,61 +291,61 @@ void FluidSolver::advect(float *u, float *u0, float **v, float dt, int b)
     setBoundary(u, b);
 }
 
+// jacobi iteration solver
 void FluidSolver::linSolve(float *u, float *u0, float a, float c, int b)
 {
-    static int numIterations = 20;
+    static int numIterations = 80;
     for (int t = 0; t < numIterations; ++t){
-        for (int i = 1; i < width - 1; ++i){
-            for (int j = 1; j < height - 1; ++j){
-                for (int k = 1; k < depth - 1; ++k){
-                    u[idx(i,j,k)] = (u0[idx(i,j,k)] + a * (
-                    u[idx(i-1,j,k)] + u[idx(i+1,j,k)] +
-                    u[idx(i,j-1,k)] + u[idx(i,j+1,k)] +
-                    u[idx(i,j,k-1)] + u[idx(i,j,k+1)])) / c
+        for (int i = 1; i < m_nx; ++i){
+            for (int j = 1; j < m_ny; ++j){
+                for (int k = 1; k < m_nz; ++k){
+                    m_buf[idx(i,j,k)] = (u0[idx(i,j,k)] + a * (
+                        u[idx(i-1,j,k)] + u[idx(i+1,j,k)] +
+                        u[idx(i,j-1,k)] + u[idx(i,j+1,k)] +
+                        u[idx(i,j,k-1)] + u[idx(i,j,k+1)])) / c;
                 }
             }
         }
-    setBoundary(u, b);
+        SWAP(m_buf, u);
+        setBoundary(u, b);
     }
 }
 
 void FluidSolver::diffuse(float *u, float *u0, float k, float dt, int b)
 {
-    float a = k * dt * (m_nx - 1) * (m_ny - 1) * (m_nz - 1);
-    float c = 1 + 4 * a;
+    float a = k * dt;
+    float c = 1 + 6 * a;
     linSolve(u, u0, a, c, b);
 }
 
 void FluidSolver::project(float **v, float *p, float *div)
 {
     float *vx = v[0], *vy = v[1], *vz = v[2];
-    for (int i = 1; i < width - 1; ++i){
-        for (int j = 1; j < height - 1; ++j){
-            for (int k = 1; k < depth - 1; ++k){
-                // missing scale factor for divergence
-                div[idx(i,j,k)] = -0.5f * (vx[idx(i+1,j,k)] - vx[idx(i-1,j,k)]
-                    + vy[idx(i,j+1,k)] - vy[idx(i,j-1,k)]
-                    + vz[idx(i,j,k+1)] - vz[idx(i,j,k-1)]);
-                p[idx(i,j,k)] = 0.f;
+        for (int i = 1; i < m_nx; ++i){
+            for (int j = 1; j < m_ny; ++j){
+                for (int k = 1; k < m_nz; ++k){
+                    div[idx(i,j,k)] = -1.f/3.f * (
+                        (vx[idx(i+1,j,k)] - vx[idx(i-1,j,k)]) / m_hx +
+                        (vy[idx(i,j+1,k)] - vy[idx(i,j-1,k)]) / m_hy +
+                        (vz[idx(i,j,k+1)] - vz[idx(i,j,k-1)]) / m_hz);
+                    p[idx(i,j,k)] = 0.f;
             }
         }
     }
     setBoundary(div, 0);
     setBoundary(p, 0);
 
-    // how do a and c terms work here
-    linSolve(p, div, 1, 4);
-    for (int i = 1; i < width - 1; ++i){
-        for (int j = 1; j < height - 1; ++j){
-            for (int k = 1; k < depth - 1; ++k){
-                // account for scale factor here too
-                vx[idx(i,j,k)] -= 0.5f * (p[idx(i+1,j,k)] - p[idx(i-1,j,k)]);
-                vy[idx(i,j,k)] -= 0.5f * (p[idx(i,j+1,k)] - p[idx(i,j-1,k)]);
-                vz[idx(i,j,k)] -= 0.5f * (p[idx(i,j,k+1)] - p[idx(i,j,k-1)]);
+    linSolve(p, div, 1, 6, 0);
+    for (int i = 1; i < m_nx; ++i){
+        for (int j = 1; j < m_ny; ++j){
+            for (int k = 1; k < m_nz; ++k){
+                vx[idx(i,j,k)] -= 0.5f * (p[idx(i+1,j,k)] - p[idx(i-1,j,k)]) / m_hx;
+                vy[idx(i,j,k)] -= 0.5f * (p[idx(i,j+1,k)] - p[idx(i,j-1,k)]) / m_hy;
+                vz[idx(i,j,k)] -= 0.5f * (p[idx(i,j,k+1)] - p[idx(i,j,k-1)]) / m_hz;
             }
         }
     }
-    setBoundary(ux, 1);
-    setBoundary(uy, 2);
-    setBoundary(uz, 3);
+    setBoundary(vx, 1);
+    setBoundary(vy, 2);
+    setBoundary(vz, 3);
 }
