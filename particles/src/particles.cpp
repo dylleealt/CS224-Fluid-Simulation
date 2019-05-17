@@ -20,15 +20,16 @@ void Particles::init() {
 
     // Initialize solver
     m_solver = std::make_unique<FluidSolver>();
-    m_solver->init(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.0167);
+    m_solver->init(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
     m_solver->reset();
     float visc = m_solver->getViscosity();
     float diff = m_solver->getDiffusionRate();
     float rate = m_solver->getDissipationRate();
+    float vorticity = m_solver->getVorticity();
     float dt = m_solver->getTimeStep();
     for (int i = 0; i < 1000; ++i){
         std::cout<<i<<std::endl;
-        m_solver->update(visc, diff, rate, dt, 3);
+        m_solver->update(visc, diff, rate, vorticity, dt, 3);
     }
 
     // Initializes a grid of particles, will convert to triangle strip later maybe

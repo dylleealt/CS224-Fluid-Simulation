@@ -25,7 +25,7 @@ FluidSolver::~FluidSolver()
     delete m_d0;
 }
 
-void FluidSolver::init(int x, int y, int z, float width, float height, float depth, float visc, float diff, float rate, float dt)
+void FluidSolver::init(int x, int y, int z, float width, float height, float depth, float visc, float diff, float rate, float vorticity, float dt)
 {
     m_numCols = x;
     m_numRows = y;
@@ -51,17 +51,19 @@ void FluidSolver::init(int x, int y, int z, float width, float height, float dep
     m_visc = visc;
     m_kS = diff;
     m_aS = rate;
+    m_swirl = vorticity;
     m_dt = dt;
 
-    m_vx = new float[m_numCells];
-    m_vy = new float[m_numCells];
-    m_vz = new float[m_numCells];
-    m_vx0 = new float[m_numCells];
-    m_vy0 = new float[m_numCells];
-    m_vz0 = new float[m_numCells];
-    m_cx = new float[m_numCells];
-    m_cy = new float[m_numCells];
-    m_cz = new float[m_numCells];
+    m_vx = new float[m_numCells]();
+    m_vy = new float[m_numCells]();
+    m_vz = new float[m_numCells]();
+    m_vx0 = new float[m_numCells]();
+    m_vy0 = new float[m_numCells]();
+    m_vz0 = new float[m_numCells]();
+    m_cx = new float[m_numCells]();
+    m_cy = new float[m_numCells]();
+    m_cz = new float[m_numCells]();
+    m_vort = new float[m_numCells]();
 
     m_v[0] = m_vx;
     m_v[1] = m_vy;
@@ -70,11 +72,11 @@ void FluidSolver::init(int x, int y, int z, float width, float height, float dep
     m_v0[1] = m_vy0;
     m_v0[2] = m_vz0;
 
-    m_p = new float[m_numCells];
-    m_div = new float[m_numCells];
-    m_d = new float[m_numCells];
-    m_d0 = new float[m_numCells];
-    m_buf = new float[m_numCells];
+    m_p = new float[m_numCells]();
+    m_div = new float[m_numCells]();
+    m_d = new float[m_numCells]();
+    m_d0 = new float[m_numCells]();
+    m_buf = new float[m_numCells]();
 }
 
 void FluidSolver::reset()
@@ -107,7 +109,7 @@ void FluidSolver::reset()
     */
 }
 
-void FluidSolver::update(float visc, float diff, float rate, float dt, int flag)
+void FluidSolver::update(float visc, float diff, float rate, float vorticity, float dt, int flag)
 {
     // update velocity
     addForce(m_vx, m_vx0, dt, 2);
@@ -117,6 +119,12 @@ void FluidSolver::update(float visc, float diff, float rate, float dt, int flag)
 //    for (int i = 0; i < m_numCells; ++i){
 //        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
 //    }
+
+    vorticityConfinement(m_v, vorticity, dt);
+
+    for (int i = 0; i < m_numCells; ++i){
+        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
+    }
 
     diffuse(m_vx0, m_vx, visc, dt, 1);
     diffuse(m_vy0, m_vy, visc, dt, 2);
@@ -241,7 +249,7 @@ void FluidSolver::addForce(float *u, float *f, float dt, int flag)
                     for (int k = 1; k < m_nz; ++k){
                         int cx = m_nx / 2, cy = m_ny / 2;
                         float relx = i - cx, rely = j - cy;
-                        float radius = std::max(1.f, relx * rely); // not really, we'll fix this later
+                        float radius = std::max(1.f, relx + rely); // not really, we'll fix this later
                         // add an orthogonal vector to get swirl
                         m_vx[idx(i, j, k)] += -rely * dt / radius;
                         m_vy[idx(i, j, k)] += -relx * dt / radius;
@@ -313,7 +321,7 @@ void FluidSolver::linSolve(float *u, float *u0, float a, float c, int b)
 
 void FluidSolver::diffuse(float *u, float *u0, float k, float dt, int b)
 {
-    float a = k * dt;
+    float a = k * dt / (m_hx * m_hy * m_hz);
     float c = 1 + 6 * a;
     linSolve(u, u0, a, c, b);
 }
@@ -345,6 +353,73 @@ void FluidSolver::project(float **v, float *p, float *div)
             }
         }
     }
+    setBoundary(vx, 1);
+    setBoundary(vy, 2);
+    setBoundary(vz, 3);
+}
+
+void FluidSolver::curl(float *c, float *u, float *v, int b)
+{
+    int du_dx = 0, du_dy = 0, du_dz = 0;
+    int dv_dx = 0, dv_dy = 0, dv_dz = 0;
+
+    // axes for curl
+    if (b == 1) { du_dy = 1; dv_dz = 1; }
+    else if (b == 2) { du_dz = 1; dv_dx = 1; }
+    else if (b == 3) { du_dx = 1; dv_dy = 1; }
+
+    for (int i = 1; i < m_nx; ++i){
+        for (int j = 1; j < m_ny; ++j){
+            for (int k = 1; k < m_nz; ++k){
+                c[idx(i, j, k)] = 0.5f * (
+                        (v[idx(i + du_dx, j + du_dy, k + du_dz)] - v[idx(i - du_dx, j - du_dy, k + du_dz)]) -
+                        (u[idx(i + dv_dx, j + dv_dy, k + dv_dz)] - u[idx(i - dv_dx, j - dv_dy, k - dv_dz)])
+                        );
+            }
+        }
+    }
+}
+
+void FluidSolver::vorticityConfinement(float **v, float vorticity, float dt)
+{
+    float *vx = v[0], *vy = v[1], *vz = v[2];
+    // calculate curl
+    curl(m_cx, vy, vz, 1);
+    curl(m_cy, vz, vx, 2);
+    curl(m_cz, vx, vy, 3);
+
+    // calculate magnitude of vorticity vector
+    for (int i = 1; i < m_nx; ++i){
+        for (int j = 1; j < m_ny; ++j){
+            for (int k = 1; k < m_nz; ++k){
+                int index = idx(i, j, k);
+                m_vort[index] = sqrt(m_cx[index] * m_cx[index] + m_cy[index] * m_cy[index] + m_cz[index] * m_cz[index]);
+            }
+        }
+    }
+
+    setBoundary(m_vort, 0);
+
+    // calculate gradient of vorticity
+    for (int i = 1; i < m_nx; ++i){
+        for (int j = 1; j < m_ny; ++j){
+            for (int k = 1; k < m_nz; ++k){
+                float gradvortx = 0.5f * (m_vort[idx(i + 1, j, k)] - m_vort[idx(i - 1, j, k)]);
+                float gradvorty = 0.5f * (m_vort[idx(i, j + 1, k)] - m_vort[idx(i, j - 1, k)]);
+                float gradvortz = 0.5f * (m_vort[idx(i, j, k + 1)] - m_vort[idx(i, j, k - 1)]);
+                float norm = sqrt(gradvortx * gradvortx + gradvorty * gradvorty + gradvortz * gradvortz) + 0.0001f;
+                // normalize gradient
+                gradvortx /= norm;
+                gradvorty /= norm;
+                gradvortz /= norm;
+                // add force
+                vx[idx(i, j, k)] += vorticity * (gradvorty * m_cz[idx(i, j, k)] - gradvortz * m_cy[idx(i, j, k)]) * dt;
+                vy[idx(i, j, k)] += vorticity * (gradvortz * m_cx[idx(i, j, k)] - gradvortx * m_cz[idx(i, j, k)]) * dt;
+                vz[idx(i, j, k)] += vorticity * (gradvortx * m_cy[idx(i, j, k)] - gradvorty * m_cx[idx(i, j, k)]) * dt;
+            }
+        }
+    }
+
     setBoundary(vx, 1);
     setBoundary(vy, 2);
     setBoundary(vz, 3);
