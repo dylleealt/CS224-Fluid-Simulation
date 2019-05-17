@@ -102,6 +102,11 @@ void FluidSolver::reset()
     */
 }
 
+void FluidSolver::update(int flag)
+{
+    update(m_visc, m_kS, m_aS, m_swirl, m_dt, flag);
+}
+
 void FluidSolver::update(float visc, float diff, float rate, float vorticity, float dt, int flag)
 {
     // update velocity

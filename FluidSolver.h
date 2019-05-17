@@ -29,6 +29,7 @@ class FluidSolver
         float *getPressure(){ return m_p; }
         float *getDensity(){ return m_d; }
 
+        void update(int flag);
         void update(float visc, float diff, float rate, float vorticity, float dt, int flag);
 
         inline int idx(int i, int j, int k){ return i + m_numCols * (j + m_numRows * k); }

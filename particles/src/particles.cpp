@@ -48,8 +48,8 @@ void Particles::init() {
     }
 
     // Initialize solver
-//    m_solver = std::make_unique<FluidSolver>(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
-//    m_solver->reset();
+    m_solver = std::make_unique<FluidSolver>(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
+    m_solver->reset();
 //    float visc = m_solver->getViscosity();
 //    float diff = m_solver->getDiffusionRate();
 //    float rate = m_solver->getDissipationRate();
@@ -57,7 +57,7 @@ void Particles::init() {
 //    float dt = m_solver->getTimeStep();
 //    float **velocity = m_solver->getVelocity();
 //    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
-//    int maxIterations = 200;
+//    int maxIterations = 100;
 //    for (int iteration = 0; iteration < maxIterations; ++iteration){
 //        std::cout<<iteration<<std::endl;
 //        int flag = (iteration < 0.7f * maxIterations) ? 4 : 1;
@@ -71,10 +71,15 @@ void Particles::init() {
 //                                    m_solver->interpolate(vz, pos.x, pos.y, pos.z));
 //            for (int j = 0; j < numVerticesPerParticle; ++j){
 //                m_particles[i + j] += v * dt;
-//                glm::clamp(m_particles[index], glm::vec3(1.5), glm::vec3(m_numRows - 1.5));
+//                glm::clamp(m_particles[i], glm::vec3(1.5), glm::vec3(m_numRows - 1.5));
 //            }
 //        }
 //    }
+
+    for (int i = 0; i < m_particles.size(); ++i){
+        glm::vec3 pos = m_particles[i];
+        std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
+    }
 
     // Initialize OpenGLShape.
     m_shape = std::make_unique<OpenGLShape>();
@@ -90,6 +95,25 @@ void Particles::init() {
  */
 void Particles::draw()
 {
+    float **velocity = m_solver->getVelocity();
+    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
+    float dt = m_solver->getTimeStep();
+    m_solver->update(4);
+    // update positions
+    for (int i = 0; i < m_particles.size(); i+=12){
+        glm::vec3 pos = m_particles[i];
+        // std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
+        glm::vec3 v = glm::vec3(m_solver->interpolate(vx, pos.x, pos.y, pos.z),
+                                m_solver->interpolate(vy, pos.x, pos.y, pos.z),
+                                m_solver->interpolate(vz, pos.x, pos.y, pos.z));
+        for (int j = 0; j < 12; ++j){
+            m_particles[i + j] += v * dt;
+            glm::clamp(m_particles[i], glm::vec3(1.5), glm::vec3(m_numRows - 1.5));
+        }
+    }
+    m_shape->setVertexData(&m_particles[0][0], 3 * m_particles.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, m_particles.size());
+    m_shape->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+    m_shape->buildVAO();
     std::cout<<"draw"<<std::endl;
     m_shape->draw();
     std::cout<<"finished!"<<std::endl;
