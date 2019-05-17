@@ -39,11 +39,13 @@ class Renderer
     private:
         float m_timestep;
         int m_numFrames;
+        int m_numCells;
 
         std::unique_ptr<FluidSolver> m_fSolver;
         std::unique_ptr<LevelSetSolver> m_lsSolver;
 
         glm::mat3x3 relativeMatrix(glm::vec3 lookVector);
+        float sdBox(glm::vec3 p, glm::vec3 b);
 
 //        static float* initializeDistanceField(int numCells, float size, float radius);
 //        static float* initializeDensityField(int numCells, float size, float radius);
