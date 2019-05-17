@@ -112,8 +112,9 @@ void FluidSolver::update(float visc, float diff, float rate, float vorticity, fl
 //    for (int i = 0; i < m_numCells; ++i){
 //        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
 //    }
-
-    vorticityConfinement(m_v, vorticity, dt);
+    if (vorticity > 0.f){
+        vorticityConfinement(m_v, vorticity, dt);
+    }
 
 //    for (int i = 0; i < m_numCells; ++i){
 //        std::cout<<"v: "<<m_vx[i]<<" "<<m_vy[i]<<" "<<m_vz[i]<<std::endl;
