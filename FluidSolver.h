@@ -34,6 +34,8 @@ class FluidSolver
         inline int idx(int i, int j, int k){ return i + m_numCols * (j + m_numRows * k); }
         float interpolate(float *u, float x, float y, float z);
 
+        float *m_d0;
+
     private:
         int m_numCols;     // num cells along each dimension
         int m_numRows;
@@ -76,7 +78,6 @@ class FluidSolver
         float *m_p;        // pressure
         float *m_div;
         float *m_d;        // density
-        float *m_d0;
 
         float *m_buf;      // temporary array used in the linear solver
 

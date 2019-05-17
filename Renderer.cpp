@@ -1,13 +1,15 @@
 #include "Renderer.h"
+
 #include <iostream>
 
-Renderer::Renderer(float timestep, int numFrames, int numCells, float size, float radius, float visc, float diff, float rate, int numParticles):
+Renderer::Renderer(float timestep, int numFrames, int numCells, float size, float radius, float visc, float diff, float rate, float vorticity, int numParticles):
     m_timestep(timestep),
-    m_numFrames(numFrames),
-    //TODO: figure out how to make density field and initial level set match!!! It's HIGHLY possible that the particles aren't even the way to go here
-    m_fSolver(numCells, numCells, numCells, size, size, size, visc, diff, rate, timestep),
-    m_lsSolver(numCells, numCells, numCells, size, size, size, timestep, numParticles)
+    m_numFrames(numFrames)
+
 {
+    m_fSolver = std::make_unique<FluidSolver>(numCells, numCells, numCells, size, size, size, visc, diff, rate, vorticity, timestep);
+    m_lsSolver = std::make_unique<LevelSetSolver>(numCells, numCells, numCells, size, size, size, timestep, numParticles);
+
     float cellSize = size/numCells;
     float half_diag = sqrt(cellSize*cellSize*3.0)*0.5;
     glm::vec3 center = glm::vec3(size*0.5,size*0.5,size*0.5);
@@ -15,12 +17,12 @@ Renderer::Renderer(float timestep, int numFrames, int numCells, float size, floa
         for (int y = 0; y < numCells; y++) {
             for (int z = 0; z < numCells; z++) {
                 float dist = glm::distance(cellSize * glm::vec3(x, y, z), center) - radius;
-                m_lsSolver.m_phi0[x + numCells * (y + numCells * z)] = dist;
+                m_lsSolver->m_phi0[x + numCells * (y + numCells * z)] = dist;
                 if (dist < half_diag) {
-                    m_fSolver.m_d0[x + numCells * (y + numCells * z)] = 1.0;
+                    m_fSolver->m_d0[x + numCells * (y + numCells * z)] = 1.0;
                 } else {
 //                    std::cerr<<"test\n";
-                    m_fSolver.m_d0[x + numCells * (y + numCells * z)] = 0.0;
+                    m_fSolver->m_d0[x + numCells * (y + numCells * z)] = 0.0;
                 }
             }
         }
@@ -74,7 +76,7 @@ float Renderer::rayMarch(glm::vec3 rayOrigin, glm::vec3 rayDir) {
     float surface_dist = 0.005;
     for (int i = 0; i < max_steps; i++) {
         glm::vec3 p = rayOrigin + (distance_to_origin * rayDir);
-        float distance_to_surface = m_lsSolver.interpolate(m_lsSolver.m_phi, p.x, p.y, p.z);
+        float distance_to_surface = m_lsSolver->interpolate(m_lsSolver->m_phi, p.x, p.y, p.z);
         distance_to_origin += distance_to_surface;
         if(distance_to_surface < surface_dist || distance_to_origin > max_dist) {
             break;
@@ -110,11 +112,11 @@ void Renderer::simulateAndRender(int width, int height) {
     //each iteration of for loop is one step forward in time: define what the timestep is and use this when playing back rendered frames
     for (int i = 0; i < m_numFrames; ++i){
         if (i < 100) {
-            m_fSolver.update(m_fSolver.getViscosity(), m_fSolver.getDiffusionRate(), m_fSolver.getDissipationRate(), m_timestep, 4);
+            m_fSolver->update(m_fSolver->getViscosity(), m_fSolver->getDiffusionRate(), m_fSolver->getDissipationRate(), m_fSolver->getVorticity(), m_timestep, 4);
         } else {
-            m_fSolver.update(m_fSolver.getViscosity(), m_fSolver.getDiffusionRate(), m_fSolver.getDissipationRate(), m_timestep, 1);
+            m_fSolver->update(m_fSolver->getViscosity(), m_fSolver->getDiffusionRate(), m_fSolver->getDissipationRate(), m_fSolver->getVorticity(), m_timestep, 1);
         }
-       m_lsSolver.update(m_fSolver.getVelocity());
+       m_lsSolver->update(m_fSolver->getVelocity());
        QImage image(width, height, QImage::Format_RGB32);
        QRgb *imageData = reinterpret_cast<QRgb *>(image.bits());
        glm::vec3 cameraPos = glm::vec3(0,1,0);
@@ -130,7 +132,7 @@ void Renderer::simulateAndRender(int width, int height) {
                imageData[offset] = qRgb(iDist, iDist, iDist);
            }
        }
-       QString output = QString("C:\\Users\\Thomas\\Documents\\Brown\\cs2240\\images\\img").append(i).append(QString(".png"));
+       QString output = QString("C:\\Users\\Thomas\\Documents\\Brown\\cs2240\\images\\img").append(QString::number(i)).append(QString(".png"));
        bool success = image.save(output);
        if(!success) {
            success = image.save(output, "PNG");
