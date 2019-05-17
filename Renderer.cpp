@@ -5,8 +5,8 @@ Renderer::Renderer(float timestep, int numFrames, int numCells, float size, floa
     m_timestep(timestep),
     m_numFrames(numFrames),
     //TODO: figure out how to make density field and initial level set match!!! It's HIGHLY possible that the particles aren't even the way to go here
-    m_fSolver(numCells, numCells, numCells, size, size, size, visc, diff, rate, timestep),
-    m_lsSolver(numCells, numCells, numCells, size, size, size, timestep, numParticles)
+    m_lsSolver(numCells, numCells, numCells, size, size, size, timestep, numParticles),
+    m_fSolver(numCells, numCells, numCells, size, size, size, visc, diff, rate, timestep)
 {
     float cellSize = size/numCells;
     float half_diag = sqrt(cellSize*cellSize*3.0)*0.5;
