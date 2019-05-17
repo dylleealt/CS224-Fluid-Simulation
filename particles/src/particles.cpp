@@ -19,8 +19,7 @@ void Particles::init() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // Initialize solver
-    m_solver = std::make_unique<FluidSolver>();
-    m_solver->init(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
+    m_solver = std::make_unique<FluidSolver>(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
     m_solver->reset();
     float visc = m_solver->getViscosity();
     float diff = m_solver->getDiffusionRate();

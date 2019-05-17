@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "openglshape.h"
-#include "../FluidSolver3D.h"
+#include "../FluidSolver.h"
 
 class Particles {
 public:

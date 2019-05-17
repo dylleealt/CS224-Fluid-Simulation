@@ -36,7 +36,7 @@ SOURCES += \
     src/gl/datatype/IBO.cpp \
     src/gl/GLDebug.cpp \
     ../glew-1.10.0/src/glew.c \
-    ../FluidSolver3D.cpp \
+    ../FluidSolver.cpp \
     src/particles.cpp
 
 HEADERS += \
@@ -52,7 +52,7 @@ HEADERS += \
     src/gl/shaders/ShaderAttribLocations.h \
     src/gl/GLDebug.h \
     ../glew-1.10.0/include/GL/glew.h \
-    ../FluidSolver3D.h \
+    ../FluidSolver.h \
     src/particles.h
 
 FORMS += src/mainwindow.ui

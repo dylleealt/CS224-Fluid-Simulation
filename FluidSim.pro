@@ -4,13 +4,11 @@ CONFIG -= app_bundle
 #CONFIG -= qt
 
 SOURCES += main.cpp \
-    Particles.cpp \
     Renderer.cpp \
     FluidSolver.cpp \
     LevelSetSolver.cpp
 
 HEADERS += \
-    Particles.h \
     Renderer.h \
     FluidSolver.h \
     LevelSetSolver.h
