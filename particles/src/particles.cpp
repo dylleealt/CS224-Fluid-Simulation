@@ -4,6 +4,8 @@
 #include <iostream>
 #include "gl/shaders/ShaderAttribLocations.h"
 
+extern int framenumber;
+
 const glm::vec3 tri1 = glm::vec3(0.5, 0, 0);
 const glm::vec3 tri2 = glm::vec3(0.25, 0, 0.433);
 const glm::vec3 tri3 = glm::vec3(0.25, 0.4787, 0.144);
@@ -17,6 +19,9 @@ Particles::Particles() : m_numRows(50), m_numCols(m_numRows), m_numLayers(m_numR
  */
 void Particles::init() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    m_frameNumber = framenumber;
+    std::cout<<framenumber<<std::endl;
 
     // Initializes a grid of particles, will convert to triangle strip later maybe
     int numParticles = m_numCols * m_numRows * m_numLayers;
@@ -48,38 +53,37 @@ void Particles::init() {
     }
 
     // Initialize solver
-    m_solver = std::make_unique<FluidSolver>(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.1, 0.0167);
+    m_solver = std::make_unique<FluidSolver>(m_numCols, m_numRows, m_numLayers, m_numCols, m_numRows, m_numLayers, 0.0005, 0.2, 0, 0.3, 0.0416f);
     m_solver->reset();
-//    float visc = m_solver->getViscosity();
-//    float diff = m_solver->getDiffusionRate();
-//    float rate = m_solver->getDissipationRate();
-//    float vorticity = m_solver->getVorticity();
-//    float dt = m_solver->getTimeStep();
-//    float **velocity = m_solver->getVelocity();
-//    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
-//    int maxIterations = 100;
-//    for (int iteration = 0; iteration < maxIterations; ++iteration){
-//        std::cout<<iteration<<std::endl;
-//        int flag = (iteration < 0.7f * maxIterations) ? 4 : 1;
-//        m_solver->update(visc, diff, rate, vorticity, dt, flag);
-//        // update positions
-//        for (int i = 0; i < m_particles.size(); i+=numVerticesPerParticle){
-//            glm::vec3 pos = m_particles[i];
-//            // std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
-//            glm::vec3 v = glm::vec3(m_solver->interpolate(vx, pos.x, pos.y, pos.z),
-//                                    m_solver->interpolate(vy, pos.x, pos.y, pos.z),
-//                                    m_solver->interpolate(vz, pos.x, pos.y, pos.z));
-//            for (int j = 0; j < numVerticesPerParticle; ++j){
-//                m_particles[i + j] += v * dt;
-//                glm::clamp(m_particles[i], glm::vec3(1.5), glm::vec3(m_numRows - 1.5));
-//            }
-//        }
-//    }
-
-    for (int i = 0; i < m_particles.size(); ++i){
-        glm::vec3 pos = m_particles[i];
-        std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
+    float visc = m_solver->getViscosity();
+    float diff = m_solver->getDiffusionRate();
+    float rate = m_solver->getDissipationRate();
+    float vorticity = m_solver->getVorticity();
+    float dt = m_solver->getTimeStep();
+    float **velocity = m_solver->getVelocity();
+    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
+    int maxIterations = m_frameNumber;
+    for (int iteration = 0; iteration < maxIterations; ++iteration){
+        int flag = (iteration < 450) ? 4 : 1;
+        m_solver->update(visc, diff, rate, vorticity, dt, flag);
+        // update positions
+        for (int i = 0; i < m_particles.size(); i+=numVerticesPerParticle){
+            glm::vec3 pos = m_particles[i];
+            // std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
+            glm::vec3 v = glm::vec3(m_solver->interpolate(vx, pos.x, pos.y, pos.z),
+                                    m_solver->interpolate(vy, pos.x, pos.y, pos.z),
+                                    m_solver->interpolate(vz, pos.x, pos.y, pos.z));
+            for (int j = 0; j < numVerticesPerParticle; ++j){
+                m_particles[i + j] += v * dt;
+                glm::clamp(m_particles[i], glm::vec3(1.5), glm::vec3(m_numRows - 1.5));
+            }
+        }
     }
+
+//    for (int i = 0; i < m_particles.size(); ++i){
+//        glm::vec3 pos = m_particles[i];
+//        std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
+//    }
 
     // Initialize OpenGLShape.
     m_shape = std::make_unique<OpenGLShape>();
@@ -95,25 +99,25 @@ void Particles::init() {
  */
 void Particles::draw()
 {
-    float **velocity = m_solver->getVelocity();
-    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
-    float dt = m_solver->getTimeStep();
-    m_solver->update(4);
-    // update positions
-    for (int i = 0; i < m_particles.size(); i+=12){
-        glm::vec3 pos = m_particles[i];
-        // std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
-        glm::vec3 v = glm::vec3(m_solver->interpolate(vx, pos.x, pos.y, pos.z),
-                                m_solver->interpolate(vy, pos.x, pos.y, pos.z),
-                                m_solver->interpolate(vz, pos.x, pos.y, pos.z));
-        for (int j = 0; j < 12; ++j){
-            m_particles[i + j] += v * dt;
-            glm::clamp(m_particles[i], glm::vec3(1.5), glm::vec3(m_numRows - 1.5));
-        }
-    }
-    m_shape->setVertexData(&m_particles[0][0], 3 * m_particles.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, m_particles.size());
-    m_shape->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
-    m_shape->buildVAO();
+//    float **velocity = m_solver->getVelocity();
+//    float *vx = velocity[0], *vy = velocity[1], *vz = velocity[2];
+//    float dt = m_solver->getTimeStep();
+//    m_solver->update(4);
+//    // update positions
+//    for (int i = 0; i < m_particles.size(); i+=12){
+//        glm::vec3 pos = m_particles[i];
+//        // std::cout<<pos.x<<" "<<pos.y<<" "<<pos.z<<std::endl;
+//        glm::vec3 v = glm::vec3(m_solver->interpolate(vx, pos.x, pos.y, pos.z),
+//                                m_solver->interpolate(vy, pos.x, pos.y, pos.z),
+//                                m_solver->interpolate(vz, pos.x, pos.y, pos.z));
+//        for (int j = 0; j < 12; ++j){
+//            m_particles[i + j] += v * dt;
+//            glm::clamp(m_particles[i], glm::vec3(1.5), glm::vec3(m_numRows - 1.5));
+//        }
+//    }
+//    m_shape->setVertexData(&m_particles[0][0], 3 * m_particles.size(), VBO::GEOMETRY_LAYOUT::LAYOUT_TRIANGLES, m_particles.size());
+//    m_shape->setAttribute(ShaderAttrib::POSITION, 3, 0, VBOAttribMarker::DATA_TYPE::FLOAT, false);
+//    m_shape->buildVAO();
     std::cout<<"draw"<<std::endl;
     m_shape->draw();
     std::cout<<"finished!"<<std::endl;

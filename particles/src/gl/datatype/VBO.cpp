@@ -24,7 +24,7 @@ VBO::VBO(const float *data, int sizeInFloats, std::vector<VBOAttribMarker> marke
     glGenBuffers(1, &m_handle);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_handle);
-    glBufferData(GL_ARRAY_BUFFER, sizeInFloats * sizeof(GLfloat), &data[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeInFloats * sizeof(GLfloat), &data[0], GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

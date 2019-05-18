@@ -17,6 +17,7 @@ public:
     void init();
     void draw();
     void test();
+    int getFrameNumber() { return m_frameNumber; }
 
 private:
     float randValue(int row, int col);
@@ -24,6 +25,8 @@ private:
 
     std::unique_ptr<OpenGLShape> m_shape;
     std::unique_ptr<FluidSolver> m_solver;
+
+    int m_frameNumber;
 
     std::vector<glm::vec3> m_particles;
 };

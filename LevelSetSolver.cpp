@@ -99,9 +99,9 @@ float LevelSetSolver::phi_axis(int x, int y, int z, float delta, char axis, floa
         float v3;
         float v4;
         float v5;
-//        if (delta == 0.0) {
-//            delta = 1.0;
-//        }
+        if (delta == 0.0) {
+            delta = 0.001f;
+        }
 		if (vel > 0) {
             v1 = (phi_offset(m_phi0, x, y, z, -2, axis) - phi_offset(m_phi0, x, y, z, -3, axis)) / delta;
             v2 = (phi_offset(m_phi0, x, y, z, -1, axis) - phi_offset(m_phi0, x, y, z, -2, axis)) / delta;

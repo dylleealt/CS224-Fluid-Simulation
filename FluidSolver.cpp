@@ -229,12 +229,12 @@ void FluidSolver::setBoundary(float *u, int b)
 void FluidSolver::addForce(float *u, float *f, float dt, int flag)
 {
     float G = -9.8f;
-    float F = 10.f;
+    float F = 6.f;
     switch (flag){
         case 1: // only gravity
             for (int i = 0; i < m_numCells; ++i){
                 // may need to adjust gravitational accel later due to units
-                m_vz[i] += G * dt;
+                m_vy[i] += G * dt;
             }
             break;
         case 2: // only external force
@@ -251,13 +251,13 @@ void FluidSolver::addForce(float *u, float *f, float dt, int flag)
             for (int i = 1; i < m_nx; ++i){
                 for (int j = 1; j < m_ny; ++j){
                     for (int k = 1; k < m_nz; ++k){
-                        int cx = m_nx / 2, cy = m_ny / 2;
-                        float relx = i - cx, rely = j - cy;
-                        float radius = std::max(1.f, relx + rely); // not really, we'll fix this later
+                        int cx = m_nx / 2, cz = m_nz / 2;
+                        float relx = i - cx, relz = j - cz;
+                        float radius = std::max(1.f, relx + relz); // not really, we'll fix this later
                         // add an orthogonal vector to get swirl
-                        m_vx[idx(i, j, k)] += F * -rely * dt / radius;
-                        m_vy[idx(i, j, k)] += F * -relx * dt / radius;
-                        m_vz[idx(i, j, k)] += G * dt;
+                        m_vx[idx(i, j, k)] += F * -relz * dt / radius;
+                        m_vz[idx(i, j, k)] += F * -relx * dt / radius;
+                        m_vy[idx(i, j, k)] += G * dt;
                     }
                 }
             }
