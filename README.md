@@ -15,7 +15,7 @@ Implementing a subset of [Efficient Simulation of Large Bodies of Water by Coupl
 
 #### Bugs/Issues
   * The level set diverges from the correct distance field very quickly, breaks after a few frames
-  * Frame rendering issue has been fixed! Now renders about 1 frame every 2 seconds on a good CPU.
+  * Frame rendering issue has been fixed! Now renders about 2 frames per second on a good CPU.
 
 #### Group Members
 Dylan Tian  
