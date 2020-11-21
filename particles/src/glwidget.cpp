@@ -29,7 +29,7 @@ void GLWidget::initializeGL() {
     m_particles.init();
 
     rebuildMatrices();
-    paint();
+    // paint();
 }
 
 void GLWidget::paint() {
@@ -77,6 +77,7 @@ void GLWidget::paintGL() {
 
     // Unbind shader program.
     glUseProgram(0);
+    exit(1);
 }
 
 void GLWidget::resizeGL(int w, int h) {

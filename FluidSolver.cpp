@@ -61,15 +61,15 @@ FluidSolver::FluidSolver(int x, int y, int z, float width, float height, float d
 
 FluidSolver::~FluidSolver()
 {
-    delete m_vx;
-    delete m_vy;
-    delete m_vz;
-    delete m_vx0;
-    delete m_vy0;
-    delete m_vz0;
-    delete m_p;
-    delete m_d;
-    delete m_d0;
+    delete[] m_vx;
+    delete[] m_vy;
+    delete[] m_vz;
+    delete[] m_vx0;
+    delete[] m_vy0;
+    delete[] m_vz0;
+    delete[] m_p;
+    delete[] m_d;
+    delete[] m_d0;
 }
 
 void FluidSolver::reset()
